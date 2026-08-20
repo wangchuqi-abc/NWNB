@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>求与影 - 节奏音游</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #0b0b16;
+    color: #fff;
+    font-family: "Microsoft YaHei", sans-serif;
+    overflow: hidden;
+  }
+
+  #game {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  canvas {
+    display: block;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0b0b16 100%);
+    border-radius: 8px;
+    box-shadow: 0 0 40px rgba(100, 100, 255, 0.2);
+  }
+
+  #ui {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 18px;
+    line-height: 1.6;
+    text-shadow: 0 0 10px rgba(100, 200, 255, 0.8);
+    pointer-events: none;
+  }
+
+  #startScreen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10;
+  }
+
+  #startScreen h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #ff6b9d, #c44dff, #6bc5ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  #startScreen p {
+    font-size: 16px;
+    color: #aaa;
+    margin-bottom: 30px;
+  }
+
+  #startBtn {
+    padding: 15px 50px;
+    font-size: 22px;
+    border: 2px solid #c44dff;
+    background: transparent;
+    color: #fff;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  #startBtn:hover {
+    background: #c44dff;
+    box-shadow: 0 0 30px rgba(196, 77, 255, 0.6);
+  }
+
+  #resultScreen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 10;
+  }
+
+  #resultScreen h2 {
+    font-size: 42px;
+    margin-bottom: 20px;
+    color: #6bc5ff;
+  }
+
+  #resultScreen .stat {
+    font-size: 20px;
+    margin: 8px 0;
+  }
+
+  #restartBtn {
+    margin-top: 30px;
+    padding: 12px 40px;
+    font-size: 20px;
+    border: 2px solid #6bc5ff;
+    background: transparent;
+    color: #fff;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  #restartBtn:hover {
+    background: #6bc5ff;
+    color: #000;
+  }
+
+  .key-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 14px;
+    color: #666;
+  }
+</style>
+</head>
+<body>
+
+<div id="game">
+  <canvas id="canvas"></canvas>
+
+  <div id="ui">
+    <div>得分: <span id="score">0</span></div>
+    <div>连击: <span id="combo">0</span></div>
+    <div id="judgeText" style="font-size:24px; color:#ffcc00; min-height:30px;"></div>
+  </div>
+
+  <div id="startScreen">
+    <h1>求与影</h1>
+    <p>按下 D F J K 击中下落的音符</p>
+    <button id="startBtn">开始游戏</button>
+  </div>
+
+  <div id="resultScreen">
+    <h2>演奏结束</h2>
+    <div class="stat">最终得分: <span id="finalScore">0</span></div>
+    <div class="stat">最大连击: <span id="maxCombo">0</span></div>
+    <div class="stat">Perfect: <span id="perfectCount">0</span></div>
+    <div class="stat">Good: <span id="goodCount">0</span></div>
+    <div class="stat">Miss: <span id="missCount">0</span></div>
+    <button id="restartBtn">再来一次</button>
+  </div>
+
+  <div class="key-hint">按键: D F J K</div>
+</div>
+
+<script>
+// ========== 配置 ==========
+const MUSIC_URL = '求与影.mp3';
+const LANE_COUNT = 4;
+const KEYS = ['KeyD', 'KeyF', 'KeyJ', 'KeyK'];
+const LANE_COLORS = ['#ff6b9d', '#c44dff', '#6bc5ff', '#4dff88'];
+
+const NOTE_SPEED = 420;        // 音符下落速度 px/s
+const HIT_Y_OFFSET = 80;       // 判定线距底部距离
+const PERFECT_WINDOW = 0.06;   // Perfect 判定窗口(秒)
+const GOOD_WINDOW = 0.12;      // Good 判定窗口(秒)
+const MISS_WINDOW = 0.18;      // Miss 窗口(秒)
+
+// ========== DOM ==========
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const comboEl = document.getElementById('combo');
+const judgeTextEl = document.getElementById('judgeText');
+const startScreen = document.getElementById('startScreen');
+const resultScreen = document.getElementById('resultScreen');
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+
+// ========== 画布尺寸 ==========
+function resizeCanvas() {
+  const w = Math.min(window.innerWidth, 600);
+  const h = window.innerHeight;
+  canvas.width = w;
+  canvas.height = h;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ========== 游戏状态 ==========
+let audioCtx, analyser, sourceNode, audioBuffer;
+let notes = [];
+let score = 0, combo = 0, maxCombo = 0;
+let perfectCount = 0, goodCount = 0, missCount = 0;
+let isPlaying = false;
+let startTime = 0;
+let judgeTimer = 0;
+let particles = [];
+let beatPulse = 0;
+
+// ========== 音频加载 ==========
+async function loadAudio() {
+  const response = await fetch(MUSIC_URL);
+  const arrayBuffer = await response.arrayBuffer();
+  audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+}
+
+// ========== 节奏分析：根据音频能量生成音符 ==========
+function generateNotes() {
+  const sampleRate = audioBuffer.sampleRate;
+  const channelData = audioBuffer.getChannelData(0);
+  const duration = audioBuffer.duration;
+
+  // 使用较大的窗口来检测能量变化（约30ms）
+  const windowSize = Math.floor(sampleRate * 0.03);
+  const hopSize = Math.floor(sampleRate * 0.015); // 15ms hop
+
+  let prevEnergy = 0;
+  let lastNoteTime = 0;
+  const minInterval = 0.12; // 音符最小间隔(秒)
+
+  for (let i = 0; i + windowSize < channelData.length; i += hopSize) {
+    // 计算当前窗口能量
+    let energy = 0;
+    for (let j = 0; j < windowSize; j++) {
+      energy += channelData[i + j] * channelData[i + j];
+    }
+    energy = Math.sqrt(energy / windowSize);
+
+    const currentTime = i / sampleRate;
+
+    // 检测能量突增（鼓点/节拍）
+    const energyDiff = energy - prevEnergy;
+    const threshold = 0.02;
+
+    if (energyDiff > threshold && energy > 0.05 && (currentTime - lastNoteTime) > minInterval) {
+      // 根据能量强度决定分配到哪个轨道
+      const lane = Math.floor(Math.random() * LANE_COUNT);
+
+      // 音符需要在判定线之前出现，所以要提前 NOTE_TRAVEL_TIME 秒
+      const travelTime = (canvas.height - HIT_Y_OFFSET) / NOTE_SPEED;
+      const noteTime = currentTime; // 这个时间点是音乐中的节拍点
+
+      notes.push({
+        lane: lane,
+        time: noteTime,
+        y: -20,
+        hit: false,
+        missed: false,
+        alpha: 1
+      });
+
+      lastNoteTime = currentTime;
+    }
+
+    prevEnergy = energy * 0.7 + prevEnergy * 0.3; // 平滑
+  }
+
+  // 按时间排序
+  notes.sort((a, b) => a.time - b.time);
+}
+
+// ========== 开始游戏 ==========
+async function startGame() {
+  startScreen.style.display = 'none';
+  resultScreen.style.display = 'none';
+
+  // 重置状态
+  score = 0; combo = 0; maxCombo = 0;
+  perfectCount = 0; goodCount = 0; missCount = 0;
+  notes = [];
+  particles = [];
+  updateUI();
+
+  // 初始化音频
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    await audioCtx.resume();
+  }
+
+  // 加载音频（如果还没加载）
+  if (!audioBuffer) {
+    await loadAudio();
+  }
+
+  // 生成音符
+  generateNotes();
+
+  // 创建分析器
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+
+  // 播放音频
+  sourceNode = audioCtx.createBufferSource();
+  sourceNode.buffer = audioBuffer;
+  sourceNode.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  sourceNode.start();
+
+  startTime = audioCtx.currentTime;
+  isPlaying = true;
+
+  sourceNode.onended = () => {
+    setTimeout(() => {
+      if (isPlaying) endGame();
+    }, 2000);
+  };
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ========== 结束游戏 ==========
+function endGame() {
+  isPlaying = false;
+  if (sourceNode) {
+    try { sourceNode.stop(); } catch(e) {}
+  }
+
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('maxCombo').textContent = maxCombo;
+  document.getElementById('perfectCount').textContent = perfectCount;
+  document.getElementById('goodCount').textContent = goodCount;
+  document.getElementById('missCount').textContent = missCount;
+  resultScreen.style.display = 'flex';
+}
+
+// ========== 判定 ==========
+function tryHit(lane) {
+  const currentTime = audioCtx.currentTime - startTime;
+  let closestNote = null;
+  let closestDist = Infinity;
+
+  for (const note of notes) {
+    if (note.hit || note.missed || note.lane !== lane) continue;
+    const dist = Math.abs(note.time - currentTime);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestNote = note;
+    }
+  }
+
+  if (!closestNote) return;
+
+  if (closestDist <= PERFECT_WINDOW) {
+    closestNote.hit = true;
+    score += 300 * (1 + combo * 0.1);
+    combo++;
+    perfectCount++;
+    showJudge('Perfect!', '#ffcc00');
+    spawnParticles(lane, '#ffcc00');
+  } else if (closestDist <= GOOD_WINDOW) {
+    closestNote.hit = true;
+    score += 150 * (1 + combo * 0.05);
+    combo++;
+    goodCount++;
+    showJudge('Good', '#6bc5ff');
+    spawnParticles(lane, '#6bc5ff');
+  } else if (closestDist <= MISS_WINDOW) {
+    closestNote.hit = true;
+    combo = 0;
+    missCount++;
+    showJudge('Miss', '#ff4444');
+  }
+
+  if (combo > maxCombo) maxCombo = combo;
+  updateUI();
+}
+
+function showJudge(text, color) {
+  judgeTextEl.textContent = text;
+  judgeTextEl.style.color = color;
+  judgeTimer = 0.6;
+}
+
+function updateUI() {
+  scoreEl.textContent = Math.floor(score);
+  comboEl.textContent = combo;
+}
+
+// ========== 粒子效果 ==========
+function spawnParticles(lane, color) {
+  const laneWidth = canvas.width / LANE_COUNT;
+  const x = lane * laneWidth + laneWidth / 2;
+  const y = canvas.height - HIT_Y_OFFSET;
+
+  for (let i = 0; i < 12; i++) {
+    const angle = (Math.PI * 2 / 12) * i + Math.random() * 0.3;
+    const speed = 100 + Math.random() * 150;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 100,
+      life: 0.6,
+      maxLife: 0.6,
+      color: color,
+      size: 3 + Math.random() * 3
+    });
+  }
+}
+
+// ========== 游戏主循环 ==========
+let lastTime = 0;
+function gameLoop(timestamp) {
+  if (!isPlaying) return;
+
+  const dt = lastTime ? (timestamp - lastTime) / 1000 : 0.016;
+  lastTime = timestamp;
+
+  const currentTime = audioCtx.currentTime - startTime;
+
+  // 获取频谱数据用于背景效果
+  let freqData = null;
+  if (analyser) {
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(freqData);
+    // 计算低频能量作为节拍脉冲
+    let bass = 0;
+    for (let i = 0; i < 8; i++) bass += freqData[i];
+    beatPulse = bass / (8 * 255);
+  }
+
+  // 更新音符位置
+  const hitY = canvas.height - HIT_Y_OFFSET;
+  for (const note of notes) {
+    if (note.hit || note.missed) continue;
+    // 计算音符应该出现的位置
+    const timeDiff = note.time - currentTime;
+    note.y = hitY - timeDiff * NOTE_SPEED;
+
+    // 如果音符已经过了判定线太远，算 Miss
+    if (timeDiff < -MISS_WINDOW) {
+      note.missed = true;
+      combo = 0;
+      missCount++;
+      showJudge('Miss', '#ff4444');
+      updateUI();
+    }
+  }
+
+  // 更新粒子
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += 300 * dt; // 重力
+    p.life -= dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // 判定文字淡出
+  if (judgeTimer > 0) {
+    judgeTimer -= dt;
+    if (judgeTimer <= 0) judgeTextEl.textContent = '';
+  }
+
+  // ========== 绘制 ==========
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 背景节拍脉冲
+  if (beatPulse > 0.3) {
+    ctx.fillStyle = `rgba(100, 50, 200, ${beatPulse * 0.15})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // 绘制频谱背景
+  if (freqData) {
+    const barWidth = canvas.width / freqData.length;
+    ctx.globalAlpha = 0.15;
+    for (let i = 0; i < freqData.length; i++) {
+      const barHeight = (freqData[i] / 255) * canvas.height * 0.4;
+      const hue = (i / freqData.length) * 360;
+      ctx.fillStyle = `hsl(${hue}, 80%, 60%)`;
+      ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // 绘制轨道
+  const laneWidth = canvas.width / LANE_COUNT;
+  for (let i = 0; i < LANE_COUNT; i++) {
+    ctx.fillStyle = `rgba(255, 255, 255, 0.03)`;
+    ctx.fillRect(i * laneWidth, 0, laneWidth, canvas.height);
+
+    // 轨道分隔线
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.beginPath();
+    ctx.moveTo(i * laneWidth, 0);
+    ctx.lineTo(i * laneWidth, canvas.height);
+    ctx.stroke();
+  }
+
+  // 绘制判定线
+  ctx.strokeStyle = `rgba(255, 255, 255, ${0.5 + beatPulse * 0.5})`;
+  ctx.lineWidth = 2 + beatPulse * 2;
+  ctx.beginPath();
+  ctx.moveTo(0, hitY);
+  ctx.lineTo(canvas.width, hitY);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+
+  // 绘制判定区域
+  for (let i = 0; i < LANE_COUNT; i++) {
+    const x = i * laneWidth + laneWidth / 2;
+    ctx.beginPath();
+    ctx.arc(x, hitY, 25 + beatPulse * 5, 0, Math.PI * 2);
+    ctx.strokeStyle = LANE_COLORS[i];
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.4 + beatPulse * 0.3;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+  }
+
+  // 绘制音符
+  for (const note of notes) {
+    if (note.hit || note.missed) continue;
+    if (note.y < -30 || note.y > canvas.height + 30) continue;
+
+    const x = note.lane * laneWidth + laneWidth / 2;
+    const color = LANE_COLORS[note.lane];
+
+    // 音符发光
+    const gradient = ctx.createRadialGradient(x, note.y, 0, x, note.y, 22);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x - 22, note.y - 22, 44, 44);
+
+    // 音符主体
+    ctx.beginPath();
+    ctx.arc(x, note.y, 16, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+
+  // 绘制粒子
+  for (const p of particles) {
+    const alpha = p.life / p.maxLife;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+
+[(doc_common_card_1)]
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>求与影 - 节奏音游</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0b0b16; color: #fff;
+    font-family: "Microsoft YaHei", sans-serif;
+    overflow: hidden;
+  }
+  #game {
+    position: relative;
+    width: 100vw; height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+  }
+  canvas {
+    display: block;
+    background: radial-gradient(ellipse at center, #1a1a2e 0%, #0b0b16 100%);
+    border-radius: 8px;
+    box-shadow: 0 0 40px rgba(100, 100, 255, 0.2);
+  }
+  #ui {
+    position: absolute; top: 20px; left: 20px;
+    font-size: 18px; line-height: 1.6;
+    text-shadow: 0 0 10px rgba(100, 200, 255, 0.8);
+    pointer-events: none;
+  }
+  #startScreen, #resultScreen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 10;
+  }
+  #resultScreen { display: none; }
+  #startScreen h1 {
+    font-size: 48px; margin-bottom: 20px;
+    background: linear-gradient(135deg, #ff6b9d, #c44dff, #6bc5ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  #startScreen p { font-size: 16px; color: #aaa; margin-bottom: 30px; }
+  #startBtn, #restartBtn {
+    padding: 15px 50px; font-size: 22px;
+    border: 2px solid #c44dff; background: transparent;
+    color: #fff; border-radius: 30px; cursor: pointer;
+    transition: all 0.3s;
+  }
+  #startBtn:hover, #restartBtn:hover {
+    background: #c44dff;
+    box-shadow: 0 0 30px rgba(196, 77, 255, 0.6);
+  }
+  #resultScreen h2 { font-size: 42px; margin-bottom: 20px; color: #6bc5ff; }
+  #resultScreen .stat { font-size: 20px; margin: 8px 0; }
+  #restartBtn { border-color: #6bc5ff; }
+  #restartBtn:hover { background: #6bc5ff; color: #000; }
+  .key-hint {
+    position: absolute; bottom: 20px; left: 50%;
+    transform: translateX(-50%); font-size: 14px; color: #666;
+  }
+</style>
+</head>
+<body>
+
+<div id="game">
+  <canvas id="canvas"></canvas>
+
+  <div id="ui">
+    <div>得分: <span id="score">0</span></div>
+    <div>连击: <span id="combo">0</span></div>
+    <div id="judgeText" style="font-size:24px; color:#ffcc00; min-height:30px;"></div>
+  </div>
+
+  <div id="startScreen">
+    <h1>求与影</h1>
+    <p>按下 D F J K 击中下落的音符</p>
+    <button id="startBtn">开始游戏</button>
+  </div>
+
+  <div id="resultScreen">
+    <h2>演奏结束</h2>
+    <div class="stat">最终得分: <span id="finalScore">0</span></div>
+    <div class="stat">最大连击: <span id="maxCombo">0</span></div>
+    <div class="stat">Perfect: <span id="perfectCount">0</span></div>
+    <div class="stat">Good: <span id="goodCount">0</span></div>
+    <div class="stat">Miss: <span id="missCount">0</span></div>
+    <button id="restartBtn">再来一次</button>
+  </div>
+
+  <div class="key-hint">按键: D F J K</div>
+</div>
+
+<script>
+// ========== 配置 ==========
+const MUSIC_URL = '求与影.mp3';
+const LANE_COUNT = 4;
+const KEYS = ['KeyD', 'KeyF', 'KeyJ', 'KeyK'];
+const LANE_COLORS = ['#ff6b9d', '#c44dff', '#6bc5ff', '#4dff88'];
+
+const NOTE_SPEED = 420;
+const HIT_Y_OFFSET = 80;
+const PERFECT_WINDOW = 0.06;
+const GOOD_WINDOW = 0.12;
+const MISS_WINDOW = 0.18;
+
+// ========== DOM ==========
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const comboEl = document.getElementById('combo');
+const judgeTextEl = document.getElementById('judgeText');
+const startScreen = document.getElementById('startScreen');
+const resultScreen = document.getElementById('resultScreen');
+const startBtn = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+
+function resizeCanvas() {
+  const w = Math.min(window.innerWidth, 600);
+  const h = window.innerHeight;
+  canvas.width = w;
+  canvas.height = h;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ========== 游戏状态 ==========
+let audioCtx, analyser, sourceNode, audioBuffer;
+let notes = [];
+let score = 0, combo = 0, maxCombo = 0;
+let perfectCount = 0, goodCount = 0, missCount = 0;
+let isPlaying = false;
+let startTime = 0;
+let judgeTimer = 0;
+let particles = [];
+let beatPulse = 0;
+let lastTime = 0;
+
+// ========== 音频加载 ==========
+async function loadAudio() {
+  const response = await fetch(MUSIC_URL);
+  const arrayBuffer = await response.arrayBuffer();
+  audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+}
+
+// ========== 根据音频节奏生成音符 ==========
+function generateNotes() {
+  const sampleRate = audioBuffer.sampleRate;
+  const channelData = audioBuffer.getChannelData(0);
+
+  const windowSize = Math.floor(sampleRate * 0.03);
+  const hopSize = Math.floor(sampleRate * 0.015);
+
+  let prevEnergy = 0;
+  let lastNoteTime = 0;
+  const minInterval = 0.12;
+
+  for (let i = 0; i + windowSize < channelData.length; i += hopSize) {
+    let energy = 0;
+    for (let j = 0; j < windowSize; j++) {
+      energy += channelData[i + j] * channelData[i + j];
+    }
+    energy = Math.sqrt(energy / windowSize);
+
+    const currentTime = i / sampleRate;
+    const energyDiff = energy - prevEnergy;
+
+    if (energyDiff > 0.02 && energy > 0.05 && (currentTime - lastNoteTime) > minInterval) {
+      const lane = Math.floor(Math.random() * LANE_COUNT);
+      notes.push({
+        lane: lane,
+        time: currentTime,
+        y: -20,
+        hit: false,
+        missed: false
+      });
+      lastNoteTime = currentTime;
+    }
+
+    prevEnergy = energy * 0.7 + prevEnergy * 0.3;
+  }
+
+  notes.sort((a, b) => a.time - b.time);
+}
+
+// ========== 开始游戏 ==========
+async function startGame() {
+  startScreen.style.display = 'none';
+  resultScreen.style.display = 'none';
+
+  score = 0; combo = 0; maxCombo = 0;
+  perfectCount = 0; goodCount = 0; missCount = 0;
+  notes = [];
+  particles = [];
+  lastTime = 0;
+  updateUI();
+
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    await audioCtx.resume();
+  }
+
+  if (!audioBuffer) {
+    await loadAudio();
+  }
+
+  generateNotes();
+
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+
+  sourceNode = audioCtx.createBufferSource();
+  sourceNode.buffer = audioBuffer;
+  sourceNode.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  sourceNode.start();
+
+  startTime = audioCtx.currentTime;
+  isPlaying = true;
+
+  sourceNode.onended = () => {
+    setTimeout(() => {
+      if (isPlaying) endGame();
+    }, 2000);
+  };
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ========== 结束游戏 ==========
+function endGame() {
+  isPlaying = false;
+  if (sourceNode) {
+    try { sourceNode.stop(); } catch(e) {}
+  }
+
+  document.getElementById('finalScore').textContent = Math.floor(score);
+  document.getElementById('maxCombo').textContent = maxCombo;
+  document.getElementById('perfectCount').textContent = perfectCount;
+  document.getElementById('goodCount').textContent = goodCount;
+  document.getElementById('missCount').textContent = missCount;
+  resultScreen.style.display = 'flex';
+}
+
+// ========== 判定 ==========
+function tryHit(lane) {
+  const currentTime = audioCtx.currentTime - startTime;
+  let closestNote = null;
+  let closestDist = Infinity;
+
+  for (const note of notes) {
+    if (note.hit || note.missed || note.lane !== lane) continue;
+    const dist = Math.abs(note.time - currentTime);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closestNote = note;
+    }
+  }
+
+  if (!closestNote) return;
+
+  if (closestDist <= PERFECT_WINDOW) {
+    closestNote.hit = true;
+    score += 300 * (1 + combo * 0.1);
+    combo++;
+    perfectCount++;
+    showJudge('Perfect!', '#ffcc00');
+    spawnParticles(lane, '#ffcc00');
+  } else if (closestDist <= GOOD_WINDOW) {
+    closestNote.hit = true;
+    score += 150 * (1 + combo * 0.05);
+    combo++;
+    goodCount++;
+    showJudge('Good', '#6bc5ff');
+    spawnParticles(lane, '#6bc5ff');
+  } else if (closestDist <= MISS_WINDOW) {
+    closestNote.hit = true;
+    combo = 0;
+    missCount++;
+    showJudge('Miss', '#ff4444');
+  }
+
+  if (combo > maxCombo) maxCombo = combo;
+  updateUI();
+}
+
+function showJudge(text, color) {
+  judgeTextEl.textContent = text;
+  judgeTextEl.style.color = color;
+  judgeTimer = 0.6;
+}
+
+function updateUI() {
+  scoreEl.textContent = Math.floor(score);
+  comboEl.textContent = combo;
+}
+
+// ========== 粒子效果 ==========
+function spawnParticles(lane, color) {
+  const laneWidth = canvas.width / LANE_COUNT;
+  const x = lane * laneWidth + laneWidth / 2;
+  const y = canvas.height - HIT_Y_OFFSET;
+
+  for (let i = 0; i < 12; i++) {
+    const angle = (Math.PI * 2 / 12) * i + Math.random() * 0.3;
+    const speed = 100 + Math.random() * 150;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 100,
+      life: 0.6,
+      maxLife: 0.6,
+      color: color,
+      size: 3 + Math.random() * 3
+    });
+  }
+}
+
+// ========== 游戏主循环 ==========
+function gameLoop(timestamp) {
+  if (!isPlaying) return;
+
+  const dt = lastTime ? (timestamp - lastTime) / 1000 : 0.016;
+  lastTime = timestamp;
+
+  const currentTime = audioCtx.currentTime - startTime;
+
+  let freqData = null;
+  if (analyser) {
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(freqData);
+    let bass = 0;
+    for (let i = 0; i < 8; i++) bass += freqData[i];
+    beatPulse = bass / (8 * 255);
+  }
+
+  const hitY = canvas.height - HIT_Y_OFFSET;
+
+  // 更新音符位置
+  for (const note of notes) {
+    if (note.hit || note.missed) continue;
+    const timeDiff = note.time - currentTime;
+    note.y = hitY - timeDiff * NOTE_SPEED;
+
+    if (timeDiff < -MISS_WINDOW) {
+      note.missed = true;
+      combo = 0;
+      missCount++;
+      showJudge('Miss', '#ff4444');
+      updateUI();
+    }
+  }
+
+  // 更新粒子
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vy += 300 * dt;
+    p.life -= dt;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  if (judgeTimer > 0) {
+    judgeTimer -= dt;
+    if (judgeTimer <= 0) judgeTextEl.textContent = '';
+  }
+
+  // ========== 绘制 ==========
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // 背景节拍脉冲
+  if (beatPulse > 0.3) {
+    ctx.fillStyle = `rgba(100, 50, 200, ${beatPulse * 0.15})`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // 频谱背景
+  if (freqData) {
+    const barWidth = canvas.width / freqData.length;
+    ctx.globalAlpha = 0.15;
+    for (let i = 0; i < freqData.length; i++) {
+      const barHeight = (freqData[i] / 255) * canvas.height * 0.4;
+      const hue = (i / freqData.length) * 360;
+      ctx.fillStyle = `hsl(${hue}, 80%, 60%)`;
+      ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // 轨道
+  const laneWidth = canvas.width / LANE_COUNT;
+  for (let i = 0; i < LANE_COUNT; i++) {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.fillRect(i * laneWidth, 0, laneWidth, canvas.height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.beginPath();
+    ctx.moveTo(i * laneWidth, 0);
+    ctx.lineTo(i * laneWidth, canvas.height);
+    ctx.stroke();
+  }
+
+  // 判定线
+  ctx.strokeStyle = `rgba(255, 255, 255, ${0.5 + beatPulse * 0.5})`;
+  ctx.lineWidth = 2 + beatPulse * 2;
+  ctx.beginPath();
+  ctx.moveTo(0, hitY);
+  ctx.lineTo(canvas.width, hitY);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+
+  // 判定区域
+  for (let i = 0; i < LANE_COUNT; i++) {
+    const x = i * laneWidth + laneWidth / 2;
+    ctx.beginPath();
+    ctx.arc(x, hitY, 25 + beatPulse * 5, 0, Math.PI * 2);
+    ctx.strokeStyle = LANE_COLORS[i];
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.4 + beatPulse * 0.3;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.lineWidth = 1;
+  }
+
+  // 音符
+  for (const note of notes) {
+    if (note.hit || note.missed) continue;
+    if (note.y < -30 || note.y > canvas.height + 30) continue;
+
+    const x = note.lane * laneWidth + laneWidth / 2;
+    const color = LANE_COLORS[note.lane];
+
+    const gradient = ctx.createRadialGradient(x, note.y, 0, x, note.y, 22);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x - 22, note.y - 22, 44, 44);
+
+    ctx.beginPath();
+    ctx.arc(x, note.y, 16, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+  }
+
+  // 粒子
+  for (const p of particles) {
+    const alpha = p.life / p.maxLife;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  requestAnimationFrame(gameLoop);
+}
+
+// ========== 键盘输入 ==========
+window.addEventListener('keydown', (e) => {
+  if (!isPlaying) return;
+  const lane = KEYS.indexOf(e.code);
+  if (lane !== -1) {
+    tryHit(lane);
+  }
+});
+
+// ========== 按钮事件 ==========
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
+</script>
+
+</body>
+</html>
