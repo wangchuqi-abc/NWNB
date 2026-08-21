@@ -166,7 +166,7 @@ async function generateNotes() {
       setTimeout(processChunk, 0);
     } else {
       // 去重：同一位置不允许单点和长条重叠
-      tempNotes.sort((a, b) => a.time - b.time);
+      notes.sort((a, b) => a.time - b.time);
       const deduped = [];
       const minTimeGap = 0.06;
       for (const note of tempNotes) {
@@ -242,7 +242,7 @@ function tryHit(lane) {
   let closestNote = null;
   let closestDist = Infinity;
   const heldNote = laneHoldNotes[lane];
-  if (heldNote && !heldNote.tailHit) return;
+  if (heldNote && !heldNote.tailHit && !heldNote.faded) return;
   for (const note of notes) {
     if (note.hit || note.missed || note.lane !== lane) continue;
     if (note.tailHit) continue;
@@ -257,6 +257,7 @@ function tryHit(lane) {
     showJudge('Perfect!', '#ffcc00');
     spawnParticles(lane, '#ffcc00');
     playHitSound();
+    if (closestNote.faded) { closestNote.faded = false; }
     if (closestNote.isLong) {
       closestNote.held = true; closestNote.holdProgress = 0; closestNote.faded = false;
       laneHeld[lane] = true; laneHoldNotes[lane] = closestNote;
@@ -268,6 +269,7 @@ function tryHit(lane) {
     showJudge('Good', '#6bc5ff');
     spawnParticles(lane, '#6bc5ff');
     playHitSound();
+    if (closestNote.faded) { closestNote.faded = false; }
     if (closestNote.isLong) {
       closestNote.held = true; closestNote.holdProgress = 0; closestNote.faded = false;
       laneHeld[lane] = true; laneHoldNotes[lane] = closestNote;
