@@ -169,7 +169,7 @@ async function generateNotes() {
       notes.sort((a, b) => a.time - b.time);
       const deduped = [];
       const minTimeGap = 0.06;
-      for (const note of tempNotes) {
+      for (const note of notes) {
         let keep = true;
         for (const existing of deduped) {
           if (Math.abs(existing.time - note.time) < minTimeGap && existing.lane === note.lane) {
