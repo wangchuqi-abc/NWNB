@@ -454,23 +454,16 @@ function gameLoop(timestamp) {
   ctx.lineWidth = 1;
   ctx.restore();
 
+  // 判定线：纯直线，无圆圈（轨道指示用轨道底色微光）
   for (let i = 0; i < LANE_COUNT; i++) {
     const x = i * laneWidth + laneWidth / 2;
     const isHeld = laneHeld[i];
-    const radius = 28 + beatPulse * 5 + (isHeld ? 8 : 0);
-    ctx.beginPath();
-    ctx.arc(x, hitY, radius, 0, Math.PI * 2);
-    ctx.strokeStyle = LANE_COLORS[i];
-    ctx.lineWidth = isHeld ? 4 : 2;
-    ctx.globalAlpha = isHeld ? 0.9 : 0.4 + beatPulse * 0.3;
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    ctx.lineWidth = 1;
+    // 仅在按住时，在判定线位置画一个低透明度的轨道色光带
     if (isHeld) {
-      ctx.beginPath();
-      ctx.arc(x, hitY, radius - 2, 0, Math.PI * 2);
-      ctx.fillStyle = LANE_COLORS[i] + '40';
-      ctx.fill();
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = LANE_COLORS[i];
+      ctx.fillRect(i * laneWidth, hitY - 3, laneWidth, 6);
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -498,7 +491,7 @@ function gameLoop(timestamp) {
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = color;
-      ctx.fillRect(x - 18, topY, 36, bottomY - topY);
+      ctx.fillRect(x - 28, topY, 56, bottomY - topY);
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1.5;
       ctx.globalAlpha = alpha * 0.8;
@@ -506,7 +499,7 @@ function gameLoop(timestamp) {
 
       ctx.globalAlpha = note.faded ? 0.25 : (note.hit ? 0.3 : 1);
       ctx.beginPath();
-      ctx.arc(x, note.y, 18, 0, Math.PI * 2);
+      ctx.arc(x, note.y, 28, 0, Math.PI * 2);
       ctx.fillStyle = note.hit ? '#888' : color;
       ctx.fill();
       ctx.strokeStyle = '#fff';
@@ -515,7 +508,7 @@ function gameLoop(timestamp) {
 
       ctx.globalAlpha = note.faded ? 0.25 : (note.tailHit ? 0.3 : 1);
       ctx.beginPath();
-      ctx.arc(x, note.tailY, 18, 0, Math.PI * 2);
+      ctx.arc(x, note.tailY, 28, 0, Math.PI * 2);
       ctx.fillStyle = note.tailHit ? '#888' : color;
       ctx.fill();
       ctx.strokeStyle = '#fff';
@@ -527,7 +520,7 @@ function gameLoop(timestamp) {
         const barHeight = bottomY - topY;
         const fillHeight = barHeight * note.holdProgress;
         ctx.fillStyle = '#fff';
-        ctx.fillRect(x - 16, bottomY - fillHeight, 32, fillHeight);
+        ctx.fillRect(x - 24, bottomY - fillHeight, 48, fillHeight);
       }
       ctx.globalAlpha = 1;
     } else {
@@ -536,9 +529,9 @@ function gameLoop(timestamp) {
       gradient.addColorStop(0, color);
       gradient.addColorStop(1, 'transparent');
       ctx.fillStyle = gradient;
-      ctx.fillRect(x - 24, note.y - 24, 48, 48);
+      ctx.fillRect(x - 34, note.y - 34, 68, 68);
       ctx.beginPath();
-      ctx.arc(x, note.y, 18, 0, Math.PI * 2);
+      ctx.arc(x, note.y, 28, 0, Math.PI * 2);
       ctx.fillStyle = color;
       ctx.fill();
       ctx.strokeStyle = '#fff';
