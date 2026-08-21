@@ -81,19 +81,28 @@
     <button id="startBtn">开始游戏</button>
   </div>
 
+  
+  <div id="loadingScreen" style="display:none; position:absolute; inset:0; flex-direction:column; justify-content:center; align-items:center; background:rgba(0,0,0,0.9); z-index:15;">
+    <div style="font-size:24px; color:#c44dff; margin-bottom:15px;">正在分析音频...</div>
+    <div style="width:200px; height:4px; background:#333; border-radius:2px; overflow:hidden;">
+      <div id="loadingBar" style="width:0%; height:100%; background:linear-gradient(90deg,#c44dff,#6bc5ff); transition:width 0.3s;"></div>
+    </div>
+    <div id="loadingText" style="font-size:14px; color:#888; margin-top:10px;">准备中...</div>
+  </div>
+
   <div id="resultScreen">
-    <h2> 演奏结束</h2>
+    <h2>演奏结束</h2>
     <div class="stat">最终得分: <span id="finalScore">0</span></div>
     <div class="stat">最大连击: <span id="maxCombo">0</span></div>
     <div class="stat">Perfect: <span id="perfectCount">0</span></div>
     <div class="stat">Good: <span id="goodCount">0</span></div>
     <div class="stat">Miss: <span id="missCount">0</span></div>
-    <div class="stat" id="rankText" style="font-size:36px; margin-top:15px; color:#ffcc00;"></div>
     <button id="restartBtn">再来一次</button>
   </div>
 
   <div class="key-hint">按键: D F J K</div>
 </div>
+
 <script>
 // ========== 配置 ==========
 const MUSIC_URL = '求与影.mp3';
@@ -141,53 +150,97 @@ let lastTime = 0;
 
 // ========== 音频加载 ==========
 async function loadAudio() {
-  const response = await fetch(MUSIC_URL);
-  const arrayBuffer = await response.arrayBuffer();
-  audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  try {
+    const response = await fetch(MUSIC_URL);
+    if (!response.ok) {
+      throw new Error('音频文件加载失败，HTTP状态: ' + response.status);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    console.log('音频加载成功，时长:', audioBuffer.duration, '秒');
+  } catch (err) {
+    console.error('音频加载失败:', err);
+    alert('音频文件加载失败！请确认"求与影.mp3"文件与index.html在同一目录下。\n错误信息: ' + err.message);
+    throw err;
+  }
 }
 
-// ========== 根据音频节奏生成音符 ==========
-function generateNotes() {
+// ========== 根据音频节奏生成音符（异步分块版，不卡UI） ==========
+async function generateNotes() {
   const sampleRate = audioBuffer.sampleRate;
   const channelData = audioBuffer.getChannelData(0);
+  const len = channelData.length;
 
   const windowSize = Math.floor(sampleRate * 0.03);
-  const hopSize = Math.floor(sampleRate * 0.015);
+  const hopSize = Math.floor(sampleRate * 0.05);  // 增大hop减少迭代次数(0.015->0.05)
+
+  // 预计算平方前缀和，把内循环O(windowSize)降到O(1)
+  const cumSum = new Float32Array(len + 1);
+  for (let i = 0; i < len; i++) {
+    cumSum[i + 1] = cumSum[i] + channelData[i] * channelData[i];
+  }
+
+  const maxI = len - windowSize;
+  const totalSteps = Math.ceil(maxI / hopSize);
+  const chunkSize = 500;  // 每批处理500个窗口
 
   let prevEnergy = 0;
   let lastNoteTime = 0;
   const minInterval = 0.12;
+  let processed = 0;
 
-  for (let i = 0; i + windowSize < channelData.length; i += hopSize) {
-    let energy = 0;
-    for (let j = 0; j < windowSize; j++) {
-      energy += channelData[i + j] * channelData[i + j];
+  function processChunk() {
+    const end = Math.min(processed + chunkSize, totalSteps);
+    for (let step = processed; step < end; step++) {
+      const i = step * hopSize;
+      if (i + windowSize > len) break;
+
+      // O(1) 计算窗口能量（前缀和）
+      const energy = Math.sqrt((cumSum[i + windowSize] - cumSum[i]) / windowSize);
+      const currentTime = i / sampleRate;
+      const energyDiff = energy - prevEnergy;
+
+      if (energyDiff > 0.02 && energy > 0.05 && (currentTime - lastNoteTime) > minInterval) {
+        notes.push({
+          lane: Math.floor(Math.random() * LANE_COUNT),
+          time: currentTime,
+          y: -20,
+          hit: false,
+          missed: false
+        });
+        lastNoteTime = currentTime;
+      }
+
+      prevEnergy = energy * 0.7 + prevEnergy * 0.3;
     }
-    energy = Math.sqrt(energy / windowSize);
 
-    const currentTime = i / sampleRate;
-    const energyDiff = energy - prevEnergy;
+    processed = end;
 
-    if (energyDiff > 0.02 && energy > 0.05 && (currentTime - lastNoteTime) > minInterval) {
-      const lane = Math.floor(Math.random() * LANE_COUNT);
-      notes.push({
-        lane: lane,
-        time: currentTime,
-        y: -20,
-        hit: false,
-        missed: false
-      });
-      lastNoteTime = currentTime;
+    // 更新加载进度条
+    const pct = Math.floor(processed / totalSteps * 100);
+    document.getElementById('loadingBar').style.width = pct + '%';
+    document.getElementById('loadingText').textContent = '分析中... ' + pct + '%';
+
+    if (processed < totalSteps) {
+      setTimeout(processChunk, 0);  // 分块继续，让UI有喘息机会
+    } else {
+      // 全部完成，排序并进入游戏
+      notes.sort((a, b) => a.time - b.time);
+      console.log('音符生成完成，共 ' + notes.length + ' 个音符');
+      document.getElementById('loadingScreen').style.display = 'none';
+      runGame();  // 开始游戏（抽取出来避免重复定义）
     }
-
-    prevEnergy = energy * 0.7 + prevEnergy * 0.3;
   }
 
-  notes.sort((a, b) => a.time - b.time);
+  processChunk();
 }
 
 // ========== 开始游戏 ==========
 async function startGame() {
+  console.log('游戏开始按钮被点击');
+  console.log('音频URL:', MUSIC_URL);
+  console.log('画布尺寸:', canvas.width, 'x', canvas.height);
+  
   startScreen.style.display = 'none';
   resultScreen.style.display = 'none';
 
@@ -209,8 +262,12 @@ async function startGame() {
     await loadAudio();
   }
 
-  generateNotes();
+  // 显示加载界面
+  document.getElementById('loadingScreen').style.display = 'flex';
+  document.getElementById('loadingBar').style.width = '0%';
+  document.getElementById('loadingText').textContent = '准备中...';
 
+  // 启动音频上下文
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
 
@@ -229,25 +286,15 @@ async function startGame() {
     }, 2000);
   };
 
-  requestAnimationFrame(gameLoop);
+  // generateNotes 现在是异步的，完成后会自动调用 runGame
+  generateNotes();
 }
 
-// ========== 结束游戏（结尾画面） ==========
+// ========== 结束游戏 ==========
 function endGame() {
   isPlaying = false;
   if (sourceNode) {
     try { sourceNode.stop(); } catch(e) {}
-  }
-
-  // 计算评级
-  const totalNotes = perfectCount + goodCount + missCount;
-  let rank = 'D';
-  if (totalNotes > 0) {
-    const accuracy = (perfectCount * 100 + goodCount * 50) / (totalNotes * 100);
-    if (accuracy >= 0.95) rank = 'S';
-    else if (accuracy >= 0.85) rank = 'A';
-    else if (accuracy >= 0.70) rank = 'B';
-    else if (accuracy >= 0.50) rank = 'C';
   }
 
   document.getElementById('finalScore').textContent = Math.floor(score);
@@ -255,9 +302,8 @@ function endGame() {
   document.getElementById('perfectCount').textContent = perfectCount;
   document.getElementById('goodCount').textContent = goodCount;
   document.getElementById('missCount').textContent = missCount;
-  document.getElementById('rankText').textContent = '评级: ' + rank;
-
   resultScreen.style.display = 'flex';
+  document.getElementById('loadingScreen').style.display = 'none';
 }
 
 // ========== 判定 ==========
@@ -332,6 +378,12 @@ function spawnParticles(lane, color) {
       size: 3 + Math.random() * 3
     });
   }
+}
+
+// ========== 启动游戏循环 ==========
+function runGame() {
+  lastTime = 0;
+  requestAnimationFrame(gameLoop);
 }
 
 // ========== 游戏主循环 ==========
