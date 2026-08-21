@@ -37,6 +37,8 @@ canvas { display: block; }
 .song-info { color: #aaa; margin-bottom: 30px; text-align: center; line-height: 1.8; }
 .song-info .song-name { font-size: 1.5em; color: #39c5bb; }
 #loading-text { color: #39c5bb; font-size: 1em; margin-top: 20px; display: none; }
+#progress-bar { width: 240px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 12px; display: none; overflow: hidden; }
+#progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #39c5bb, #ff6699); border-radius: 2px; transition: width 0.15s; }
 .difficulty-select { display: flex; gap: 15px; margin-bottom: 30px; }
 .diff-btn {
   padding: 10px 25px; border: 2px solid #39c5bb44; background: transparent;
@@ -83,6 +85,7 @@ canvas { display: block; }
   </div>
   <button id="start-btn">开始游戏</button>
   <div id="loading-text">正在分析音频...</div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
 </div>
 
 <canvas id="game-canvas"></canvas>
@@ -208,53 +211,59 @@ async function loadAndAnalyzeAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const response = await fetch('求与影.mp3');
   const arrayBuffer = await response.arrayBuffer();
+  updateProgress(30, '正在解码音频...');
   audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
   songDuration = audioBuffer.duration;
 
-  // 离线分析
-  const offlineCtx = new OfflineAudioContext(1, audioBuffer.length, audioBuffer.sampleRate);
-  const src = offlineCtx.createBufferSource();
-  src.buffer = audioBuffer;
-
-  analyser = offlineCtx.createAnalyser();
-  analyser.fftSize = 2048;
-  src.connect(analyser);
-  analyser.connect(offlineCtx.destination);
-  src.start(0);
-
-  const renderedBuffer = await offlineCtx.startRendering();
-  channelData = renderedBuffer.getChannelData(0);
+  // 直接从解码buffer获取单声道数据，无需OfflineAudioContext渲染
+  updateProgress(50, '正在提取音频数据...');
+  const raw = audioBuffer.getChannelData(0);
+  if (audioBuffer.numberOfChannels > 1) {
+    const raw2 = audioBuffer.getChannelData(1);
+    channelData = new Float32Array(raw.length);
+    for (let i = 0; i < raw.length; i++) channelData[i] = (raw[i] + raw2[i]) * 0.5;
+  } else {
+    channelData = raw;
+  }
+  updateProgress(60, '正在分析节拍...');
 }
 
 function generateNotes(channelData) {
   const sampleRate = audioBuffer.sampleRate;
   const notes = [];
   const diffMult = CONFIG.difficultyMultiplier[currentDifficulty];
-  const windowSize = 1024;
-  const hopSize = 512;
 
-  // 能量检测 - 用于节拍检测
+  // 降采样到11025Hz大幅减少计算量（节拍检测不需要高频精度）
+  const downRate = 11025;
+  const downRatio = Math.max(1, Math.floor(sampleRate / downRate));
+  const downLen = Math.floor(channelData.length / downRatio);
+  const down = new Float32Array(downLen);
+  for (let i = 0; i < downLen; i++) down[i] = channelData[i * downRatio];
+
+  const windowSize = 512;
+  const hopSize = 256;
+
+  // 能量检测 + 过零率（替代DFT，速度快几个数量级）
   const energies = [];
-  for (let i = 0; i < channelData.length - windowSize; i += hopSize) {
-    let energy = 0;
+  const zcrs = []; // 过零率 - 粗略估计音调高低
+  for (let i = 0; i < downLen - windowSize; i += hopSize) {
+    let energy = 0, zeroCross = 0;
     for (let j = 0; j < windowSize; j++) {
-      energy += channelData[i + j] * channelData[i + j];
+      const s = down[i + j];
+      energy += s * s;
+      if (j > 0 && ((down[i + j - 1] >= 0 && s < 0) || (down[i + j - 1] < 0 && s >= 0))) {
+        zeroCross++;
+      }
     }
     energies.push(energy / windowSize);
+    zcrs.push(zeroCross);
   }
 
-  // 频谱分析 - 获取音调信息
-  const spectralData = [];
-  for (let i = 0; i < channelData.length - windowSize; i += hopSize) {
-    const segment = channelData.slice(i, i + windowSize);
-    // 简单的DFT近似用于主频率检测
-    const fft = simpleFFT(segment, sampleRate);
-    spectralData.push(fft);
-  }
+  updateProgress(80, '正在生成谱面...');
 
   // 自适应节拍检测
   const beatThreshold = calculateBeatThreshold(energies);
-  const beats = detectBeats(energies, beatThreshold, hopSize, sampleRate);
+  const beats = detectBeats(energies, beatThreshold, hopSize, downRate);
 
   // 根据节拍和频谱生成音符
   const minInterval = 180 / diffMult; // 最小间隔(ms)
@@ -265,12 +274,12 @@ function generateNotes(channelData) {
     if (beatTime < 1500 || beatTime > (songDuration * 1000 - 2000)) continue;
     if (beatTime - lastNoteTime < minInterval) continue;
 
-    // 分析该时刻的频谱特征
-    const specIdx = Math.floor(beatTime * sampleRate / (hopSize * 1000));
-    const spec = spectralData[Math.min(specIdx, spectralData.length - 1)] || { dominantFreq: 440, energy: 0.5 };
+    // 用降采样后的过零率估计音调（替代DFT）
+    const specIdx = Math.floor(beatTime * downRate / (hopSize * 1000));
+    const zcr = zcrs[Math.min(specIdx, zcrs.length - 1)] || 20;
 
-    // 根据音调选择轨道
-    let lane = freqToLane(spec.dominantFreq);
+    // 过零率越高→频率越高，映射到轨道
+    let lane = zcrToLane(zcr);
 
     // 根据能量决定音符类型
     const energy = energies[Math.min(specIdx, energies.length - 1)] || 0;
@@ -329,32 +338,11 @@ function generateNotes(channelData) {
   return notes;
 }
 
-function simpleFFT(samples, sampleRate) {
-  const N = samples.length;
-  let maxMag = 0, maxFreq = 0;
-  // 检测几个关键频率范围
-  const freqs = [130, 260, 440, 580, 880, 1200, 1800, 2500];
-  for (const freq of freqs) {
-    let real = 0, imag = 0;
-    const k = Math.round(freq * N / sampleRate);
-    for (let n = 0; n < N; n++) {
-      const angle = -2 * Math.PI * k * n / N;
-      real += samples[n] * Math.cos(angle);
-      imag += samples[n] * Math.sin(angle);
-    }
-    const mag = Math.sqrt(real * real + imag * imag) / N;
-    if (mag > maxMag) {
-      maxMag = mag;
-      maxFreq = freq;
-    }
-  }
-  return { dominantFreq: maxFreq, energy: maxMag };
-}
-
-function freqToLane(freq) {
-  if (freq < 300) return 0;
-  if (freq < 600) return 1;
-  if (freq < 1200) return 2;
+function zcrToLane(zcr) {
+  // 过零率粗略对应频率：低→bass，中→melody，高→hi-hat/vocals
+  if (zcr < 15) return 0;
+  if (zcr < 35) return 1;
+  if (zcr < 60) return 2;
   return 3;
 }
 
@@ -403,11 +391,15 @@ async function startGame() {
 
   try {
     loadingText.textContent = '正在加载音频...';
+    showProgress();
+    updateProgress(5, '正在下载音频...');
     await loadAndAnalyzeAudio();
 
     loadingText.textContent = '正在生成谱面...';
-    await new Promise(r => setTimeout(r, 100));
+    updateProgress(70, '正在分析节拍...');
+    await new Promise(r => setTimeout(r, 30));
     notes = generateNotes(channelData);
+    updateProgress(95, '准备开始...');
 
     // 确保有足够的音符
     if (notes.length < 20) {
@@ -415,6 +407,7 @@ async function startGame() {
     }
 
     document.getElementById('start-screen').classList.add('hidden');
+    hideProgress();
     gameState = 'playing';
     score = 0; combo = 0; maxCombo = 0;
     perfectCount = 0; greatCount = 0; goodCount = 0; missCount = 0;
@@ -447,6 +440,7 @@ async function startGame() {
   } catch (err) {
     console.error(err);
     loadingText.textContent = '加载失败，请确保 求与影.mp3 存在于网站根目录';
+    hideProgress();
     startBtn.style.display = 'block';
     startBtn.textContent = '重试';
   }
@@ -922,6 +916,21 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
     this.quadraticCurveTo(x, y, x + r[0], y);
     this.closePath();
   };
+}
+
+// ==================== 进度条 ====================
+function showProgress() {
+  document.getElementById('progress-bar').style.display = 'block';
+  document.getElementById('loading-text').style.display = 'block';
+}
+function hideProgress() {
+  document.getElementById('progress-bar').style.display = 'none';
+}
+function updateProgress(pct, text) {
+  const fill = document.getElementById('progress-fill');
+  const label = document.getElementById('loading-text');
+  if (fill) fill.style.width = pct + '%';
+  if (text && label) label.textContent = text;
 }
 
 // ==================== 启动 ====================
