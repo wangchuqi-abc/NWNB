@@ -65,7 +65,8 @@ canvas { display: block; }
 #retry-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px #ff669999; }
 #key-hints {
   position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-  color: #ffffff44; font-size: 0.8em; z-index: 5; letter-spacing: 2px;
+  color: #ffffff55; font-size: 0.85em; z-index: 5; letter-spacing: 3px;
+  text-shadow: 0 0 8px rgba(57,197,187,0.3);
 }
 </style>
 </head>
@@ -89,7 +90,7 @@ canvas { display: block; }
 </div>
 
 <canvas id="game-canvas"></canvas>
-<div id="key-hints">D &nbsp; F &nbsp; J &nbsp; K</div>
+<div id="key-hints">D &nbsp; F &nbsp; J &nbsp; K &nbsp;&nbsp;|&nbsp;&nbsp; 触摸轨道击打</div>
 
 <div id="result-screen">
   <div class="result-title">LIVE CLEAR!</div>
@@ -103,16 +104,16 @@ const CONFIG = {
   laneCount: 4,
   keys: ['d', 'f', 'j', 'k'],
   laneColors: ['#ff6699', '#39c5bb', '#ffcc44', '#9966ff'],
-  noteSpeed: 600,
+  noteSpeed: 650,
   hitLineY: 0.85,
-  perfectWindow: 45,
-  greatWindow: 90,
-  goodWindow: 130,
-  missWindow: 170,
-  noteWidth: 70,
-  noteHeight: 18,
-  holdNoteExtra: 30,
-  difficultyMultiplier: { easy: 0.4, normal: 0.7, hard: 1.0, expert: 1.4 },
+  perfectWindow: 40,
+  greatWindow: 80,
+  goodWindow: 120,
+  missWindow: 160,
+  noteWidth: 60,
+  noteHeight: 14,
+  trailLen: 200,
+  difficultyMultiplier: { easy: 0.65, normal: 1.0, hard: 1.5, expert: 2.0 },
 };
 
 // ==================== 全局状态 ====================
@@ -132,6 +133,7 @@ let songDuration = 0;
 let isGameOver = false;
 let keysPressed = {};
 let comboAnimation = 0;
+let touchLanes = [false, false, false, false];
 
 // ==================== 初始化 ====================
 function init() {
@@ -201,8 +203,26 @@ function setupInput() {
     if (gameState !== 'playing') return;
     for (let touch of e.changedTouches) {
       const lane = Math.floor(touch.clientX / (W / CONFIG.laneCount));
-      if (lane >= 0 && lane < CONFIG.laneCount) handleHit(lane);
+      if (lane >= 0 && lane < CONFIG.laneCount) {
+        touchLanes[lane] = true;
+        laneFlash[lane] = Math.max(laneFlash[lane], 0.6); // 触摸发光反馈
+        handleHit(lane);
+      }
     }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    for (let touch of e.changedTouches) {
+      const lane = Math.floor(touch.clientX / (W / CONFIG.laneCount));
+      if (lane >= 0 && lane < CONFIG.laneCount) {
+        touchLanes[lane] = false;
+      }
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
   }, { passive: false });
 }
 
@@ -233,7 +253,7 @@ function generateNotes(channelData) {
   const notes = [];
   const diffMult = CONFIG.difficultyMultiplier[currentDifficulty];
 
-  // 降采样到11025Hz大幅减少计算量（节拍检测不需要高频精度）
+  // 降采样到11025Hz
   const downRate = 11025;
   const downRatio = Math.max(1, Math.floor(sampleRate / downRate));
   const downLen = Math.floor(channelData.length / downRatio);
@@ -243,9 +263,9 @@ function generateNotes(channelData) {
   const windowSize = 512;
   const hopSize = 256;
 
-  // 能量检测 + 过零率（替代DFT，速度快几个数量级）
+  // 能量检测 + 过零率
   const energies = [];
-  const zcrs = []; // 过零率 - 粗略估计音调高低
+  const zcrs = [];
   for (let i = 0; i < downLen - windowSize; i += hopSize) {
     let energy = 0, zeroCross = 0;
     for (let j = 0; j < windowSize; j++) {
@@ -261,32 +281,34 @@ function generateNotes(channelData) {
 
   updateProgress(80, '正在生成谱面...');
 
-  // 自适应节拍检测
+  // 自适应节拍检测（降低阈值以捕获更多细节）
   const beatThreshold = calculateBeatThreshold(energies);
   const beats = detectBeats(energies, beatThreshold, hopSize, downRate);
 
-  // 根据节拍和频谱生成音符
-  const minInterval = 180 / diffMult; // 最小间隔(ms)
+  // 计算能量分布用于子节拍检测
+  const avgEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
+
+  // 根据节拍生成音符
+  const minInterval = 140 / diffMult;
   let lastNoteTime = -1000;
+  let lastLane = 1;
 
   for (let i = 0; i < beats.length; i++) {
     const beatTime = beats[i];
-    if (beatTime < 1500 || beatTime > (songDuration * 1000 - 2000)) continue;
+    if (beatTime < 1000 || beatTime > (songDuration * 1000 - 1500)) continue;
     if (beatTime - lastNoteTime < minInterval) continue;
 
-    // 用降采样后的过零率估计音调（替代DFT）
     const specIdx = Math.floor(beatTime * downRate / (hopSize * 1000));
     const zcr = zcrs[Math.min(specIdx, zcrs.length - 1)] || 20;
-
-    // 过零率越高→频率越高，映射到轨道
-    let lane = zcrToLane(zcr);
-
-    // 根据能量决定音符类型
     const energy = energies[Math.min(specIdx, energies.length - 1)] || 0;
-    const isHoldNote = energy > beatThreshold * 3 && diffMult > 0.6 && Math.random() < 0.2;
 
-    // 根据难度过滤
-    if (Math.random() > diffMult && diffMult < 1) continue;
+    // 智能轨道分配：避免连续同一轨道，根据音调分配
+    let lane = zcrToLane(zcr);
+    if (lane === lastLane) lane = (lane + 1 + Math.floor(Math.random() * 2)) % 4;
+    lastLane = lane;
+
+    // Hold音符：高能量段更高概率
+    const isHoldNote = energy > avgEnergy * 2.5 && Math.random() < 0.18 + diffMult * 0.08;
 
     notes.push({
       time: beatTime,
@@ -294,40 +316,42 @@ function generateNotes(channelData) {
       type: isHoldNote ? 'hold' : 'tap',
       hit: false,
       missed: false,
-      holdDuration: isHoldNote ? 300 + Math.random() * 400 : 0,
+      holdDuration: isHoldNote ? 350 + Math.random() * 500 : 0,
       y: 0,
       alpha: 1,
     });
 
-    // 高难度添加双押
-    if (diffMult >= 1.0 && Math.random() < 0.25 * (diffMult - 0.6)) {
-      let secondLane = (lane + 1 + Math.floor(Math.random() * 3)) % 4;
+    // Normal+ 添加双押
+    if (diffMult >= 1.0 && Math.random() < 0.2 + (diffMult - 1) * 0.15) {
+      let secondLane = (lane + 1 + Math.floor(Math.random() * 2)) % 4;
       notes.push({
-        time: beatTime,
-        lane: secondLane,
-        type: 'tap',
-        hit: false,
-        missed: false,
-        holdDuration: 0,
-        y: 0,
-        alpha: 1,
+        time: beatTime, lane: secondLane,
+        type: 'tap', hit: false, missed: false, holdDuration: 0, y: 0, alpha: 1,
       });
     }
 
-    // Expert难度添加连续音符
-    if (diffMult >= 1.4 && Math.random() < 0.15) {
-      const nextTime = beatTime + 120 + Math.random() * 80;
-      if (nextTime < songDuration * 1000 - 2000) {
+    // Hard+ 添加子节拍（半拍）
+    if (diffMult >= 1.3 && Math.random() < 0.35) {
+      const subTime = beatTime + 100 + Math.random() * 80;
+      if (subTime < songDuration * 1000 - 1500) {
+        const subLane = (lane + 2 + Math.floor(Math.random() * 2)) % 4;
         notes.push({
-          time: nextTime,
-          lane: (lane + 2) % 4,
-          type: 'tap',
-          hit: false,
-          missed: false,
-          holdDuration: 0,
-          y: 0,
-          alpha: 1,
+          time: subTime, lane: subLane,
+          type: 'tap', hit: false, missed: false, holdDuration: 0, y: 0, alpha: 1,
         });
+      }
+    }
+
+    // Expert 添加连续快速音符（1/4拍）
+    if (diffMult >= 1.8 && Math.random() < 0.25) {
+      for (let k = 1; k <= 2; k++) {
+        const fastTime = beatTime + k * 80;
+        if (fastTime < songDuration * 1000 - 1500) {
+          notes.push({
+            time: fastTime, lane: (lane + k) % 4,
+            type: 'tap', hit: false, missed: false, holdDuration: 0, y: 0, alpha: 1,
+          });
+        }
       }
     }
 
@@ -348,19 +372,18 @@ function zcrToLane(zcr) {
 
 function calculateBeatThreshold(energies) {
   const sorted = [...energies].sort((a, b) => b - a);
-  const topCount = Math.floor(sorted.length * 0.08);
+  const topCount = Math.floor(sorted.length * 0.1);
   let sum = 0;
   for (let i = 0; i < topCount; i++) sum += sorted[i];
-  return (sum / topCount) * 0.6;
+  return (sum / topCount) * 0.45;
 }
 
 function detectBeats(energies, threshold, hopSize, sampleRate) {
   const beats = [];
-  const minBeatGap = 120; // ms
+  const minBeatGap = 90;
   let lastBeat = -minBeatGap;
 
-  // 使用局部能量对比
-  const localWindow = 20;
+  const localWindow = 15;
   for (let i = 1; i < energies.length - 1; i++) {
     const time = (i * hopSize / sampleRate) * 1000;
     let localAvg = 0;
@@ -369,7 +392,7 @@ function detectBeats(energies, threshold, hopSize, sampleRate) {
     for (let j = start; j < end; j++) localAvg += energies[j];
     localAvg /= (end - start);
 
-    const localThreshold = Math.max(threshold, localAvg * 1.4);
+    const localThreshold = Math.max(threshold, localAvg * 1.25);
 
     if (energies[i] > localThreshold &&
         energies[i] > energies[i - 1] &&
@@ -471,7 +494,7 @@ function generateFallbackNotes() {
 }
 
 function handleHit(lane) {
-  laneFlash[lane] = 1;
+  laneFlash[lane] = 1.5; // 更强的闪烁
   const hitY = H * CONFIG.hitLineY;
   let closestNote = null;
   let closestDist = Infinity;
@@ -506,8 +529,9 @@ function handleHit(lane) {
     comboAnimation = 1;
     score += scoreAdd * (1 + Math.floor(combo / 10) * 0.1);
 
-    // 生成粒子
-    spawnHitParticles(lane, hitY, color);
+    // 根据判定等级生成不同强度的特效
+    const intensity = judgment === 'PERFECT' ? 1.0 : judgment === 'GREAT' ? 0.7 : 0.4;
+    spawnHitParticles(lane, hitY, color, intensity);
     addJudgment(judgment, color, lane);
   }
 }
@@ -519,23 +543,67 @@ function getNoteY(note) {
   return hitY - (timeDiff / 1000) * CONFIG.noteSpeed;
 }
 
-function spawnHitParticles(lane, y, color) {
+function spawnHitParticles(lane, y, color, intensity) {
   const laneWidth = W / CONFIG.laneCount;
   const x = lane * laneWidth + laneWidth / 2;
-  for (let i = 0; i < 15; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 5 + 2;
+  const count = Math.floor(20 * intensity + 8);
+
+  // 爆发粒子（向上+两侧扇形）
+  for (let i = 0; i < count; i++) {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.2;
+    const speed = (Math.random() * 6 + 3) * intensity;
     particles.push({
-      x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 3,
-      life: 1, decay: 0.02 + Math.random() * 0.02,
-      size: Math.random() * 5 + 2, color, type: 'hit'
+      x: x + (Math.random() - 0.5) * 20,
+      y: y + (Math.random() - 0.5) * 8,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 1, decay: 0.015 + Math.random() * 0.015,
+      size: (Math.random() * 6 + 2) * intensity,
+      color, type: 'hit'
     });
   }
-  // 环形特效
+
+  // 横向飞散粒子
+  for (let i = 0; i < Math.floor(8 * intensity); i++) {
+    const dir = Math.random() > 0.5 ? 1 : -1;
+    particles.push({
+      x, y,
+      vx: dir * (Math.random() * 8 + 4),
+      vy: (Math.random() - 0.5) * 3,
+      life: 1, decay: 0.02 + Math.random() * 0.01,
+      size: Math.random() * 3 + 1,
+      color: '#ffffff', type: 'hit'
+    });
+  }
+
+  // 多层扩散环
   particles.push({
-    x, y, vx: 0, vy: 0, life: 1, decay: 0.04,
-    size: 10, color, type: 'ring'
+    x, y, vx: 0, vy: 0, life: 1, decay: 0.035,
+    size: 8, color, type: 'ring'
   });
+  if (intensity > 0.6) {
+    particles.push({
+      x, y, vx: 0, vy: 0, life: 0.8, decay: 0.025,
+      size: 5, color: '#ffffff', type: 'ring'
+    });
+  }
+
+  // PERFECT时添加全屏闪光粒子
+  if (intensity >= 1.0) {
+    for (let i = 0; i < 6; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * 40 + 20;
+      particles.push({
+        x: x + Math.cos(angle) * dist,
+        y: y + Math.sin(angle) * dist,
+        vx: Math.cos(angle) * 2,
+        vy: Math.sin(angle) * 2 - 1,
+        life: 1, decay: 0.01,
+        size: Math.random() * 4 + 3,
+        color: '#ffcc44', type: 'star'
+      });
+    }
+  }
 }
 
 function addJudgment(text, color, lane) {
@@ -602,7 +670,7 @@ function update(currentTime) {
 
   // 轨道闪烁衰减
   for (let i = 0; i < 4; i++) {
-    laneFlash[i] *= 0.9;
+    if (!touchLanes[i]) laneFlash[i] *= 0.88;
   }
 
   comboAnimation *= 0.92;
@@ -672,26 +740,64 @@ function drawBackground(currentTime) {
 
 function drawLanes() {
   const laneWidth = W / CONFIG.laneCount;
+  const hitY = H * CONFIG.hitLineY;
+  // 灭点位置（屏幕顶部中央）
+  const vanishX = W / 2;
+  const vanishY = -H * 0.15;
+
+  // 透视引导线（从灭点发散到判定线）
+  ctx.globalAlpha = 0.04;
+  for (let i = 0; i <= CONFIG.laneCount; i++) {
+    const bottomX = i * laneWidth;
+    const t = 0.7; // 线条只延伸到70%处
+    const topX = vanishX + (bottomX - vanishX) * 0.15;
+    const topY = vanishY + (hitY - vanishY) * 0.05;
+    ctx.strokeStyle = '#39c5bb';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(topX, topY);
+    ctx.lineTo(bottomX, hitY);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
 
   for (let i = 0; i < CONFIG.laneCount; i++) {
     const x = i * laneWidth;
 
-    // 轨道分隔线
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    // 轨道分隔线（带渐变淡出）
+    const laneGrad = ctx.createLinearGradient(0, 0, 0, hitY);
+    laneGrad.addColorStop(0, 'rgba(255,255,255,0)');
+    laneGrad.addColorStop(0.3, 'rgba(255,255,255,0.03)');
+    laneGrad.addColorStop(0.8, 'rgba(255,255,255,0.07)');
+    laneGrad.addColorStop(1, 'rgba(255,255,255,0.04)');
+    ctx.strokeStyle = laneGrad;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(x, 0);
-    ctx.lineTo(x, H);
+    ctx.lineTo(x, hitY);
     ctx.stroke();
 
-    // 轨道闪烁
-    if (laneFlash[i] > 0.01) {
-      const grad = ctx.createLinearGradient(x, H * CONFIG.hitLineY - 100, x, H * CONFIG.hitLineY + 30);
+    // 轨道闪烁 + 触摸发光
+    const flashVal = Math.max(laneFlash[i], touchLanes[i] ? 0.4 : 0);
+    if (flashVal > 0.01) {
+      // 全轨道发光柱
+      const grad = ctx.createLinearGradient(x, hitY - 250, x, hitY + 40);
       grad.addColorStop(0, `rgba(255,255,255,0)`);
-      grad.addColorStop(0.5, CONFIG.laneColors[i] + Math.floor(laneFlash[i] * 80).toString(16).padStart(2, '0'));
-      grad.addColorStop(1, `rgba(255,255,255,0)`);
+      grad.addColorStop(0.3, CONFIG.laneColors[i] + Math.floor(flashVal * 40).toString(16).padStart(2, '0'));
+      grad.addColorStop(0.7, CONFIG.laneColors[i] + Math.floor(flashVal * 100).toString(16).padStart(2, '0'));
+      grad.addColorStop(1, CONFIG.laneColors[i] + Math.floor(flashVal * 60).toString(16).padStart(2, '0'));
       ctx.fillStyle = grad;
-      ctx.fillRect(x, 0, laneWidth, H);
+      ctx.fillRect(x, 0, laneWidth, hitY + 40);
+
+      // 判定线处圆形光晕
+      const cx = x + laneWidth / 2;
+      const glowR = laneWidth * 0.45 * flashVal;
+      const radGrad = ctx.createRadialGradient(cx, hitY, 0, cx, hitY, glowR);
+      radGrad.addColorStop(0, CONFIG.laneColors[i] + Math.floor(flashVal * 150).toString(16).padStart(2, '0'));
+      radGrad.addColorStop(0.5, CONFIG.laneColors[i] + Math.floor(flashVal * 60).toString(16).padStart(2, '0'));
+      radGrad.addColorStop(1, CONFIG.laneColors[i] + '00');
+      ctx.fillStyle = radGrad;
+      ctx.fillRect(cx - glowR, hitY - glowR, glowR * 2, glowR * 2);
     }
   }
 }
@@ -726,46 +832,121 @@ function drawHitLine() {
 
 function drawNotes(currentTime) {
   const laneWidth = W / CONFIG.laneCount;
+  const hitY = H * CONFIG.hitLineY;
   const noteW = Math.min(CONFIG.noteWidth, laneWidth - 16);
+  const trailLen = CONFIG.trailLen;
 
   for (const note of notes) {
     if (note.hit || note.missed) continue;
     const y = getNoteY(note);
-    if (y < -50 || y > H + 50) continue;
+    if (y < -300 || y > H + 50) continue;
 
-    const x = note.lane * laneWidth + (laneWidth - noteW) / 2;
+    const cx = note.lane * laneWidth + laneWidth / 2;
     const color = CONFIG.laneColors[note.lane];
 
-    // 音符发光
-    ctx.shadowBlur = 12;
-    ctx.shadowColor = color;
+    // 透视缩放
+    const distToHit = Math.max(0, hitY - y);
+    const maxDist = hitY;
+    const perspective = 1 + 0.4 * (1 - distToHit / maxDist);
+    const trailStretch = 1 + 1.5 * (1 - distToHit / maxDist);
 
-    // 音符主体
-    const grad = ctx.createLinearGradient(x, y - CONFIG.noteHeight / 2, x + noteW, y + CONFIG.noteHeight / 2);
-    grad.addColorStop(0, color);
-    grad.addColorStop(1, color + 'cc');
+    const w = noteW * perspective;
+    const h = CONFIG.noteHeight * perspective;
 
-    ctx.fillStyle = grad;
+    // ====== 拖尾光痕 ======
+    const tLen = trailLen * trailStretch;
+    // 外层宽拖尾
+    const outerGrad = ctx.createLinearGradient(cx, y, cx, Math.max(0, y - tLen));
+    outerGrad.addColorStop(0, color + '66');
+    outerGrad.addColorStop(0.2, color + '33');
+    outerGrad.addColorStop(0.6, color + '10');
+    outerGrad.addColorStop(1, color + '00');
+    ctx.fillStyle = outerGrad;
     ctx.beginPath();
-    ctx.roundRect(x, y - CONFIG.noteHeight / 2, noteW, CONFIG.noteHeight, 8);
+    ctx.moveTo(cx - w * 0.45, y);
+    ctx.lineTo(cx - w * 0.08, y - tLen);
+    ctx.lineTo(cx + w * 0.08, y - tLen);
+    ctx.lineTo(cx + w * 0.45, y);
+    ctx.closePath();
     ctx.fill();
 
-    // 音符高光
-    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    // 内层窄亮拖尾
+    const innerGrad = ctx.createLinearGradient(cx, y, cx, Math.max(0, y - tLen * 0.75));
+    innerGrad.addColorStop(0, '#ffffffaa');
+    innerGrad.addColorStop(0.3, color + '88');
+    innerGrad.addColorStop(0.7, color + '22');
+    innerGrad.addColorStop(1, color + '00');
+    ctx.fillStyle = innerGrad;
     ctx.beginPath();
-    ctx.roundRect(x + 4, y - CONFIG.noteHeight / 2 + 2, noteW - 8, CONFIG.noteHeight / 3, 4);
+    ctx.moveTo(cx - w * 0.18, y);
+    ctx.lineTo(cx - w * 0.03, y - tLen * 0.75);
+    ctx.lineTo(cx + w * 0.03, y - tLen * 0.75);
+    ctx.lineTo(cx + w * 0.18, y);
+    ctx.closePath();
     ctx.fill();
 
-    // Hold音符的尾巴
+    // ====== Hold音符：长条轨道 ======
     if (note.type === 'hold') {
       const tailY = getNoteY({ ...note, time: note.time + note.holdDuration });
-      ctx.fillStyle = color + '44';
-      ctx.fillRect(x + noteW / 2 - 4, y, 8, tailY - y);
-      ctx.fillStyle = color;
+      const holdW = w * 0.65;
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = color;
+      // 发光轨道条
+      const holdGrad = ctx.createLinearGradient(cx - holdW / 2, 0, cx + holdW / 2, 0);
+      holdGrad.addColorStop(0, color + '00');
+      holdGrad.addColorStop(0.15, color + '55');
+      holdGrad.addColorStop(0.5, color + 'cc');
+      holdGrad.addColorStop(0.85, color + '55');
+      holdGrad.addColorStop(1, color + '00');
+      ctx.fillStyle = holdGrad;
+      ctx.fillRect(cx - holdW / 2, y, holdW, Math.max(0, tailY - y));
+      // 中心白线
+      ctx.strokeStyle = '#ffffffbb';
+      ctx.lineWidth = 2.5 * perspective;
       ctx.beginPath();
-      ctx.arc(x + noteW / 2, tailY, 6, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(cx, y);
+      ctx.lineTo(cx, tailY);
+      ctx.stroke();
+      // 末端标记
+      const endH = 8 * perspective;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - holdW / 2, tailY - endH / 2, holdW, endH);
+      ctx.shadowBlur = 0;
     }
+
+    // ====== 音符主体：长条矩形 ======
+    ctx.shadowBlur = 16 * perspective;
+    ctx.shadowColor = color;
+
+    // 外发光
+    ctx.fillStyle = color + '28';
+    const glowPad = 6 * perspective;
+    ctx.fillRect(cx - w / 2 - glowPad, y - h / 2 - glowPad, w + glowPad * 2, h + glowPad * 2);
+
+    // 主体渐变长条
+    const bodyGrad = ctx.createLinearGradient(cx, y - h / 2, cx, y + h / 2);
+    bodyGrad.addColorStop(0, '#ffffffee');
+    bodyGrad.addColorStop(0.25, color);
+    bodyGrad.addColorStop(0.75, color);
+    bodyGrad.addColorStop(1, color + '99');
+    ctx.fillStyle = bodyGrad;
+    ctx.fillRect(cx - w / 2, y - h / 2, w, h);
+
+    // 顶部高光亮条
+    ctx.fillStyle = '#ffffff55';
+    ctx.fillRect(cx - w / 2 + 3, y - h / 2 + 1, w - 6, h * 0.35);
+
+    // 左右边缘亮线
+    ctx.strokeStyle = '#ffffff44';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - w / 2, y - h / 2);
+    ctx.lineTo(cx - w / 2, y + h / 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + w / 2, y - h / 2);
+    ctx.lineTo(cx + w / 2, y + h / 2);
+    ctx.stroke();
 
     ctx.shadowBlur = 0;
   }
@@ -776,10 +957,25 @@ function drawParticles() {
     ctx.globalAlpha = p.life;
     if (p.type === 'ring') {
       ctx.strokeStyle = p.color;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5 * p.life;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.stroke();
+    } else if (p.type === 'star') {
+      // 星形粒子（四角星）
+      ctx.fillStyle = p.color;
+      const s = p.size * p.life;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - s);
+      ctx.lineTo(p.x + s * 0.3, p.y - s * 0.3);
+      ctx.lineTo(p.x + s, p.y);
+      ctx.lineTo(p.x + s * 0.3, p.y + s * 0.3);
+      ctx.lineTo(p.x, p.y + s);
+      ctx.lineTo(p.x - s * 0.3, p.y + s * 0.3);
+      ctx.lineTo(p.x - s, p.y);
+      ctx.lineTo(p.x - s * 0.3, p.y - s * 0.3);
+      ctx.closePath();
+      ctx.fill();
     } else {
       ctx.fillStyle = p.color;
       ctx.beginPath();
