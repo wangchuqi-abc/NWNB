@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Windows 11 动态模拟</title>
     <style>
+        /* ===== 全局 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -22,11 +23,14 @@
             justify-content: center;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             overflow: hidden;
+            touch-action: none;
         }
 
         .win11 {
-            width: 100%;
-            max-width: 1200px;
+            width: 100vw;
+            height: 100vh;
+            max-width: 1400px;
+            max-height: 900px;
             aspect-ratio: 16 / 9;
             background: #1a1a2e;
             border-radius: 12px;
@@ -36,44 +40,61 @@
             display: flex;
             flex-direction: column;
         }
+        @media (max-width: 800px) {
+            .win11 {
+                border-radius: 0;
+                max-width: 100%;
+                max-height: 100%;
+            }
+        }
 
         /* ===== 动态壁纸 ===== */
         .wallpaper {
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             z-index: 0;
-            animation: wallpaperFlow 12s ease-in-out infinite alternate;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            animation: wallpaperFlow 14s ease-in-out infinite alternate;
+            will-change: background;
         }
         @keyframes wallpaperFlow {
             0% {
                 background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             }
-            33% {
-                background: linear-gradient(135deg, #1a1a3e, #3d3b6b, #2a2a4e);
+            25% {
+                background: linear-gradient(135deg, #1a1a3e, #4a3f7a, #2a2a4e);
             }
-            66% {
-                background: linear-gradient(135deg, #1a0f2e, #3b2a5a, #2a1a3e);
+            50% {
+                background: linear-gradient(135deg, #1a0f2e, #4a2a6a, #2a1a3e);
+            }
+            75% {
+                background: linear-gradient(135deg, #0f1a2e, #2a4a6a, #1a2a4e);
             }
             100% {
                 background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             }
         }
-        .wallpaper::after {
-            content: '';
+        .wallpaper-glow {
             position: absolute;
             inset: 0;
-            background: radial-gradient(ellipse at 30% 40%, rgba(99, 102, 241, 0.12), transparent 60%);
-            animation: glowPulse 6s ease-in-out infinite alternate;
+            z-index: 0;
+            background: radial-gradient(ellipse at 30% 40%, rgba(99, 102, 241, 0.15), transparent 60%),
+                radial-gradient(ellipse at 70% 70%, rgba(168, 85, 247, 0.10), transparent 50%);
+            animation: glowPulse 8s ease-in-out infinite alternate;
+            will-change: transform, opacity;
         }
         @keyframes glowPulse {
             0% {
-                opacity: 0.4;
+                opacity: 0.5;
                 transform: scale(1);
             }
-            100% {
+            50% {
                 opacity: 1;
-                transform: scale(1.1);
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 0.6;
+                transform: scale(0.95);
             }
         }
 
@@ -89,6 +110,7 @@
             align-content: flex-start;
             gap: 8px;
             overflow: hidden;
+            touch-action: none;
         }
         .desktop-icon {
             display: flex;
@@ -100,6 +122,8 @@
             cursor: pointer;
             width: 72px;
             transition: background 0.15s, transform 0.1s;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
         }
         .desktop-icon:hover {
             background: rgba(255, 255, 255, 0.08);
@@ -110,6 +134,7 @@
         }
         .desktop-icon .icon {
             font-size: 36px;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
         }
         .desktop-icon .label {
             font-size: 11px;
@@ -117,12 +142,14 @@
             text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
             text-align: center;
             line-height: 1.2;
+            max-width: 68px;
+            word-break: break-all;
         }
 
         /* ===== 任务栏 ===== */
         .taskbar {
             height: 48px;
-            background: rgba(30, 30, 50, 0.82);
+            background: rgba(30, 30, 50, 0.80);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -147,12 +174,14 @@
             align-items: center;
             justify-content: center;
             transition: background 0.15s;
+            touch-action: manipulation;
         }
         .taskbar .start-btn:hover {
             background: rgba(255, 255, 255, 0.08);
         }
         .taskbar .start-btn:active {
             background: rgba(255, 255, 255, 0.15);
+            transform: scale(0.92);
         }
         .taskbar .task-items {
             flex: 1;
@@ -162,6 +191,8 @@
             height: 100%;
             padding: 0 6px;
             overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
         }
         .taskbar .task-items::-webkit-scrollbar {
             height: 0;
@@ -181,9 +212,13 @@
             white-space: nowrap;
             border: none;
             flex-shrink: 0;
+            touch-action: manipulation;
         }
         .taskbar .task-item:hover {
             background: rgba(255, 255, 255, 0.06);
+        }
+        .taskbar .task-item:active {
+            transform: scale(0.95);
         }
         .taskbar .task-item.active {
             background: rgba(255, 255, 255, 0.08);
@@ -193,8 +228,20 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #4f46e5;
+            background: #4fc3f7;
             display: none;
+            animation: dotPulse 1.2s ease-in-out infinite;
+        }
+        @keyframes dotPulse {
+            0%,
+            100% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
         }
         .taskbar .task-item.active .dot {
             display: block;
@@ -215,6 +262,7 @@
             padding: 4px;
             border-radius: 4px;
             transition: background 0.15s;
+            touch-action: manipulation;
         }
         .taskbar .tray .tray-icon:hover {
             background: rgba(255, 255, 255, 0.06);
@@ -223,8 +271,9 @@
             font-size: 12px;
             font-weight: 400;
             padding: 0 4px;
-            min-width: 50px;
+            min-width: 60px;
             text-align: center;
+            font-variant-numeric: tabular-nums;
         }
 
         /* ===== 开始菜单 ===== */
@@ -276,10 +325,11 @@
             font-size: 14px;
             outline: none;
             margin-bottom: 12px;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, background 0.2s;
         }
         .start-menu .search-box:focus {
             border-color: rgba(99, 102, 241, 0.3);
+            background: rgba(255, 255, 255, 0.06);
         }
         .start-menu .search-box::placeholder {
             color: rgba(255, 255, 255, 0.25);
@@ -298,12 +348,14 @@
             border-radius: 8px;
             cursor: pointer;
             transition: background 0.15s, transform 0.1s;
+            touch-action: manipulation;
         }
         .start-menu .app-grid .app:hover {
             background: rgba(255, 255, 255, 0.06);
         }
         .start-menu .app-grid .app:active {
             transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.10);
         }
         .start-menu .app-grid .app .app-icon {
             font-size: 28px;
@@ -312,6 +364,7 @@
             font-size: 10px;
             color: rgba(255, 255, 255, 0.65);
             text-align: center;
+            line-height: 1.2;
         }
 
         /* ===== 窗口 ===== */
@@ -325,11 +378,12 @@
             box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
             display: none;
             flex-direction: column;
-            min-width: 320px;
-            min-height: 180px;
+            min-width: 280px;
+            min-height: 160px;
             z-index: 50;
             pointer-events: auto;
-            transition: box-shadow 0.2s;
+            transition: box-shadow 0.25s, border-color 0.25s;
+            touch-action: none;
         }
         .window.open {
             display: flex;
@@ -341,6 +395,8 @@
         .window.maximized {
             border-radius: 0;
             inset: 0 !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
         }
         .window .title-bar {
             display: flex;
@@ -348,9 +404,13 @@
             padding: 6px 10px;
             background: rgba(255, 255, 255, 0.02);
             border-radius: 10px 10px 0 0;
-            cursor: default;
+            cursor: grab;
             flex-shrink: 0;
             min-height: 40px;
+            touch-action: none;
+        }
+        .window .title-bar:active {
+            cursor: grabbing;
         }
         .window.maximized .title-bar {
             border-radius: 0;
@@ -384,11 +444,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.15s, color 0.15s;
+            transition: background 0.15s, color 0.15s, transform 0.1s;
+            touch-action: manipulation;
         }
         .window .title-bar .win-controls button:hover {
             background: rgba(255, 255, 255, 0.06);
             color: #fff;
+        }
+        .window .title-bar .win-controls button:active {
+            transform: scale(0.88);
         }
         .window .title-bar .win-controls .close:hover {
             background: #e81123;
@@ -416,7 +480,7 @@
             border-radius: 4px;
         }
 
-        /* ===== 文件资源管理器 ===== */
+        /* ===== 资源管理器 ===== */
         .explorer-body {
             display: flex;
             gap: 12px;
@@ -436,9 +500,13 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            touch-action: manipulation;
         }
         .explorer-sidebar .folder-item:hover {
             background: rgba(255, 255, 255, 0.04);
+        }
+        .explorer-sidebar .folder-item:active {
+            background: rgba(255, 255, 255, 0.08);
         }
         .explorer-sidebar .folder-item.active {
             background: rgba(255, 255, 255, 0.06);
@@ -459,10 +527,15 @@
             padding: 10px 4px;
             border-radius: 8px;
             cursor: pointer;
-            transition: background 0.15s;
+            transition: background 0.15s, transform 0.1s;
+            touch-action: manipulation;
         }
         .explorer-content .file-item:hover {
             background: rgba(255, 255, 255, 0.04);
+        }
+        .explorer-content .file-item:active {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.08);
         }
         .explorer-content .file-item .file-icon {
             font-size: 30px;
@@ -472,6 +545,8 @@
             color: rgba(255, 255, 255, 0.5);
             text-align: center;
             line-height: 1.2;
+            max-width: 64px;
+            word-break: break-all;
         }
 
         /* ===== 任务管理器 ===== */
@@ -498,6 +573,9 @@
         .taskmgr-body .task-row .task-cpu {
             color: rgba(255, 255, 255, 0.3);
             font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .taskmgr-body .task-row .task-cpu .bar {
             display: inline-block;
@@ -505,15 +583,13 @@
             height: 4px;
             background: rgba(255, 255, 255, 0.06);
             border-radius: 4px;
-            margin-left: 8px;
-            vertical-align: middle;
             overflow: hidden;
         }
         .taskmgr-body .task-row .task-cpu .bar .fill {
             height: 100%;
             background: linear-gradient(90deg, #4f46e5, #818cf8);
             border-radius: 4px;
-            transition: width 0.5s;
+            transition: width 0.8s ease;
         }
 
         /* ===== 右键菜单 ===== */
@@ -541,10 +617,14 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            touch-action: manipulation;
         }
         .context-menu .ctx-item:hover {
             background: rgba(255, 255, 255, 0.06);
             color: #fff;
+        }
+        .context-menu .ctx-item:active {
+            background: rgba(255, 255, 255, 0.10);
         }
         .context-menu .ctx-divider {
             height: 1px;
@@ -557,6 +637,7 @@
             .win11 {
                 border-radius: 0;
                 max-width: 100%;
+                max-height: 100%;
             }
             .start-menu {
                 width: 90%;
@@ -573,6 +654,34 @@
             .explorer-content {
                 grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
             }
+            .desktop-icon {
+                width: 64px;
+                padding: 6px 8px;
+            }
+            .desktop-icon .icon {
+                font-size: 30px;
+            }
+            .desktop-icon .label {
+                font-size: 10px;
+            }
+        }
+        @media (max-width: 480px) {
+            .taskbar .task-item {
+                padding: 0 8px;
+                font-size: 11px;
+            }
+            .taskbar .tray .clock {
+                font-size: 10px;
+                min-width: 50px;
+            }
+            .window .title-bar .title-text {
+                font-size: 12px;
+            }
+            .window .title-bar .win-controls button {
+                width: 24px;
+                height: 24px;
+                font-size: 12px;
+            }
         }
     </style>
 </head>
@@ -580,43 +689,20 @@
 
     <div class="win11" id="win11">
 
-        <!-- 壁纸 -->
+        <!-- ===== 动态壁纸 ===== -->
         <div class="wallpaper"></div>
+        <div class="wallpaper-glow"></div>
 
         <!-- ===== 桌面 ===== -->
         <div class="desktop" id="desktop">
-            <div class="desktop-icon" data-app="此电脑">
-                <div class="icon">💻</div>
-                <div class="label">此电脑</div>
-            </div>
-            <div class="desktop-icon" data-app="回收站">
-                <div class="icon">🗑️</div>
-                <div class="label">回收站</div>
-            </div>
-            <div class="desktop-icon" data-app="文档">
-                <div class="icon">📁</div>
-                <div class="label">文档</div>
-            </div>
-            <div class="desktop-icon" data-app="下载">
-                <div class="icon">📥</div>
-                <div class="label">下载</div>
-            </div>
-            <div class="desktop-icon" data-app="任务管理器">
-                <div class="icon">⚡</div>
-                <div class="label">任务管理器</div>
-            </div>
-            <div class="desktop-icon" data-app="记事本">
-                <div class="icon">📝</div>
-                <div class="label">记事本</div>
-            </div>
-            <div class="desktop-icon" data-app="设置">
-                <div class="icon">⚙️</div>
-                <div class="label">设置</div>
-            </div>
-            <div class="desktop-icon" data-app="终端">
-                <div class="icon">⌨️</div>
-                <div class="label">终端</div>
-            </div>
+            <div class="desktop-icon" data-app="此电脑"><div class="icon">💻</div><div class="label">此电脑</div></div>
+            <div class="desktop-icon" data-app="回收站"><div class="icon">🗑️</div><div class="label">回收站</div></div>
+            <div class="desktop-icon" data-app="文档"><div class="icon">📁</div><div class="label">文档</div></div>
+            <div class="desktop-icon" data-app="下载"><div class="icon">📥</div><div class="label">下载</div></div>
+            <div class="desktop-icon" data-app="任务管理器"><div class="icon">⚡</div><div class="label">任务管理器</div></div>
+            <div class="desktop-icon" data-app="记事本"><div class="icon">📝</div><div class="label">记事本</div></div>
+            <div class="desktop-icon" data-app="设置"><div class="icon">⚙️</div><div class="label">设置</div></div>
+            <div class="desktop-icon" data-app="终端"><div class="icon">⌨️</div><div class="label">终端</div></div>
         </div>
 
         <!-- ===== 任务栏 ===== -->
@@ -627,7 +713,7 @@
                 <span class="tray-icon">🔊</span>
                 <span class="tray-icon">📶</span>
                 <span class="tray-icon">🔋</span>
-                <span class="clock" id="clock">12:00</span>
+                <span class="clock" id="clock">12:00:00</span>
             </div>
         </div>
 
@@ -662,7 +748,7 @@
 
     <script>
         // ================================================================
-        //  1. 时钟（秒级跳动）
+        //  1. 动态时钟（秒级跳动）
         // ================================================================
         function updateClock() {
             const now = new Date();
@@ -681,9 +767,8 @@
         let windowZIndex = 50;
         let windowCounter = 0;
         let activeWindowId = null;
-        let windowData = {}; // 存储每个窗口的状态
+        let windowData = {};
 
-        // ---- 应用配置 ----
         const appConfigs = {
             '此电脑': { icon: '💻', title: '此电脑', content: 'explorer' },
             '回收站': { icon: '🗑️', title: '回收站', content: 'recycle' },
@@ -695,7 +780,6 @@
             '终端': { icon: '⌨️', title: '终端', content: 'terminal' },
         };
 
-        // ---- 窗口内容渲染 ----
         function renderWindowContent(appName, bodyEl) {
             const config = appConfigs[appName];
             if (!config) { bodyEl.textContent = '未知应用'; return; }
@@ -706,8 +790,7 @@
                     wrapper.className = 'explorer-body';
                     const sidebar = document.createElement('div');
                     sidebar.className = 'explorer-sidebar';
-                    const folders = ['桌面', '下载', '文档', '图片', '音乐', '视频'];
-                    folders.forEach(f => {
+                    ['桌面', '下载', '文档', '图片', '音乐', '视频'].forEach(f => {
                         const item = document.createElement('div');
                         item.className = 'folder-item' + (f === '文档' ? ' active' : '');
                         item.textContent = '📁 ' + f;
@@ -715,18 +798,18 @@
                     });
                     const content = document.createElement('div');
                     content.className = 'explorer-content';
-                    const files = [
+                    [
                         { name: '项目报告.docx', icon: '📄' },
                         { name: '照片集', icon: '🖼️' },
                         { name: '音乐', icon: '🎵' },
                         { name: '工作笔记.txt', icon: '📝' },
                         { name: '预算表.xlsx', icon: '📊' },
                         { name: '演示文稿.pptx', icon: '📽️' },
-                    ];
-                    files.forEach(f => {
+                    ].forEach(f => {
                         const item = document.createElement('div');
                         item.className = 'file-item';
-                        item.innerHTML = `<div class="file-icon">${f.icon}</div><div class="file-name">${f.name}</div>`;
+                        item.innerHTML =
+                            `<div class="file-icon">${f.icon}</div><div class="file-name">${f.name}</div>`;
                         content.appendChild(item);
                     });
                     wrapper.appendChild(sidebar);
@@ -779,7 +862,7 @@
                 case 'notepad': {
                     const ta = document.createElement('textarea');
                     ta.style.cssText =
-                        'width:100%;height:100%;background:transparent;border:none;color:rgba(255,255,255,0.75);font-size:14px;font-family:monospace;resize:none;outline:none;padding:4px;';
+                        'width:100%;height:100%;min-height:160px;background:transparent;border:none;color:rgba(255,255,255,0.75);font-size:14px;font-family:monospace;resize:none;outline:none;padding:4px;';
                     ta.placeholder = '在此输入文字...';
                     ta.value = '这是记事本\n\n你可以在这里输入文字。\n\n窗口可以拖动、最大化、最小化、关闭。';
                     bodyEl.appendChild(ta);
@@ -788,21 +871,23 @@
                 case 'settings': {
                     const div = document.createElement('div');
                     div.style.cssText = 'display:flex;flex-direction:column;gap:8px;padding:4px 0;';
-                    const items = [
+                    [
                         { icon: '🖥️', label: '显示' },
                         { icon: '🔊', label: '声音' },
                         { icon: '📶', label: '网络' },
                         { icon: '🔋', label: '电源' },
                         { icon: '🔒', label: '隐私' },
                         { icon: '🔄', label: '更新' },
-                    ];
-                    items.forEach(item => {
+                    ].forEach(item => {
                         const row = document.createElement('div');
                         row.style.cssText =
-                            'display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer;transition:background 0.15s;';
-                        row.innerHTML = `<span style="font-size:18px;">${item.icon}</span><span>${item.label}</span>`;
-                        row.addEventListener('mouseenter', () => { row.style.background = 'rgba(255,255,255,0.04)'; });
-                        row.addEventListener('mouseleave', () => { row.style.background = 'rgba(255,255,255,0.02)'; });
+                            'display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer;transition:background 0.15s;touch-action:manipulation;';
+                        row.innerHTML =
+                            `<span style="font-size:18px;">${item.icon}</span><span>${item.label}</span>`;
+                        row.addEventListener('mouseenter', () => { row.style.background =
+                            'rgba(255,255,255,0.04)'; });
+                        row.addEventListener('mouseleave', () => { row.style.background =
+                            'rgba(255,255,255,0.02)'; });
                         div.appendChild(row);
                     });
                     bodyEl.appendChild(div);
@@ -817,18 +902,14 @@
                     bodyEl.appendChild(div);
                     break;
                 }
-                default: {
-                    bodyEl.textContent = '应用内容加载中...';
-                }
+                default: { bodyEl.textContent = '应用内容加载中...'; }
             }
         }
 
-        // ---- 创建窗口 ----
         function createWindow(appName) {
             const config = appConfigs[appName];
             if (!config) return;
 
-            // 如果已存在相同应用窗口，激活它
             for (const wid in windowData) {
                 if (windowData[wid].app === appName) {
                     focusWindow(wid);
@@ -840,13 +921,12 @@
             const win = document.createElement('div');
             win.className = 'window open';
             win.id = winId;
-            win.style.width = Math.min(600, window.innerWidth * 0.7) + 'px';
-            win.style.height = Math.min(400, window.innerHeight * 0.6) + 'px';
-            win.style.left = (60 + (windowCounter % 5) * 30) + 'px';
-            win.style.top = (40 + (windowCounter % 4) * 30) + 'px';
+            win.style.width = Math.min(580, window.innerWidth * 0.7) + 'px';
+            win.style.height = Math.min(380, window.innerHeight * 0.6) + 'px';
+            win.style.left = (40 + (windowCounter % 6) * 28) + 'px';
+            win.style.top = (30 + (windowCounter % 5) * 26) + 'px';
             win.style.pointerEvents = 'auto';
 
-            // 标题栏
             const titleBar = document.createElement('div');
             titleBar.className = 'title-bar';
             titleBar.innerHTML = `
@@ -859,17 +939,13 @@
             `;
             win.appendChild(titleBar);
 
-            // 内容
             const body = document.createElement('div');
             body.className = 'window-body';
             win.appendChild(body);
-
-            // 渲染内容
             renderWindowContent(appName, body);
 
             winContainer.appendChild(win);
 
-            // 存储状态
             windowData[winId] = {
                 app: appName,
                 element: win,
@@ -878,7 +954,7 @@
                 minimized: false,
             };
 
-            // 绑定控制按钮
+            // 控制按钮
             titleBar.querySelector('.close').addEventListener('click', (e) => {
                 e.stopPropagation();
                 closeWindow(winId);
@@ -892,17 +968,13 @@
                 toggleMaximize(winId);
             });
 
-            // 点击窗口聚焦
-            win.addEventListener('mousedown', () => {
-                focusWindow(winId);
-            });
+            win.addEventListener('mousedown', () => focusWindow(winId));
 
-            // 拖拽（仅当未最大化时）
+            // ---- 鼠标拖拽 ----
             let isDragging = false,
                 dragStartX, dragStartY, dragStartLeft, dragStartTop;
             titleBar.addEventListener('mousedown', (e) => {
-                if (windowData[winId].isMaximized) return;
-                if (e.target.closest('.win-controls')) return;
+                if (windowData[winId].isMaximized || e.target.closest('.win-controls')) return;
                 isDragging = true;
                 const rect = win.getBoundingClientRect();
                 dragStartX = e.clientX;
@@ -914,25 +986,19 @@
             });
             document.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
-                const dx = e.clientX - dragStartX;
-                const dy = e.clientY - dragStartY;
+                const dx = e.clientX - dragStartX,
+                    dy = e.clientY - dragStartY;
                 win.style.left = (dragStartLeft + dx) + 'px';
                 win.style.top = (dragStartTop + dy) + 'px';
-                e.preventDefault();
             });
-            document.addEventListener('mouseup', () => {
-                if (isDragging) {
-                    isDragging = false;
-                    win.style.cursor = '';
-                }
-            });
+            document.addEventListener('mouseup', () => { isDragging = false;
+                win.style.cursor = ''; });
 
-            // 触摸拖拽（手机端）
+            // ---- 触摸拖拽 ----
             let touchDrag = false,
                 tStartX, tStartY, tLeft, tTop;
             titleBar.addEventListener('touchstart', (e) => {
-                if (windowData[winId].isMaximized) return;
-                if (e.target.closest('.win-controls')) return;
+                if (windowData[winId].isMaximized || e.target.closest('.win-controls')) return;
                 const touch = e.touches[0];
                 touchDrag = true;
                 tStartX = touch.clientX;
@@ -944,48 +1010,31 @@
             document.addEventListener('touchmove', (e) => {
                 if (!touchDrag) return;
                 const touch = e.touches[0];
-                const dx = touch.clientX - tStartX;
-                const dy = touch.clientY - tStartY;
-                win.style.left = (tLeft + dx) + 'px';
-                win.style.top = (tTop + dy) + 'px';
+                win.style.left = (tLeft + touch.clientX - tStartX) + 'px';
+                win.style.top = (tTop + touch.clientY - tStartY) + 'px';
                 e.preventDefault();
             }, { passive: false });
-            document.addEventListener('touchend', () => {
-                touchDrag = false;
-            });
+            document.addEventListener('touchend', () => { touchDrag = false; });
 
-            // 双击标题栏最大化/还原
-            titleBar.addEventListener('dblclick', () => {
-                toggleMaximize(winId);
-            });
+            titleBar.addEventListener('dblclick', () => toggleMaximize(winId));
 
-            // 聚焦
             focusWindow(winId);
-
-            // 更新任务栏
             updateTaskbar();
-
             return winId;
         }
 
-        // ---- 聚焦窗口 ----
         function focusWindow(winId) {
             const data = windowData[winId];
-            if (!data) return;
-            if (data.minimized) return;
+            if (!data || data.minimized) return;
             activeWindowId = winId;
-            // 最高z-index
             data.element.style.zIndex = ++windowZIndex;
-            // 移除所有焦点
             document.querySelectorAll('.window').forEach(w => w.classList.remove('focus'));
             data.element.classList.add('focus');
-            // 同步任务栏
             document.querySelectorAll('.task-item').forEach(el => el.classList.remove('active'));
             const taskEl = document.querySelector(`.task-item[data-window-id="${winId}"]`);
             if (taskEl) taskEl.classList.add('active');
         }
 
-        // ---- 关闭窗口 ----
         function closeWindow(winId) {
             const data = windowData[winId];
             if (!data) return;
@@ -993,14 +1042,10 @@
             delete windowData[winId];
             if (activeWindowId === winId) activeWindowId = null;
             updateTaskbar();
-            // 聚焦下一个窗口
             const keys = Object.keys(windowData);
-            if (keys.length > 0) {
-                focusWindow(keys[keys.length - 1]);
-            }
+            if (keys.length > 0) focusWindow(keys[keys.length - 1]);
         }
 
-        // ---- 最小化窗口 ----
         function minimizeWindow(winId) {
             const data = windowData[winId];
             if (!data) return;
@@ -1008,17 +1053,12 @@
             data.element.style.display = 'none';
             if (activeWindowId === winId) activeWindowId = null;
             updateTaskbar();
-            // 聚焦其他窗口
             const keys = Object.keys(windowData);
             for (let i = keys.length - 1; i >= 0; i--) {
-                if (!windowData[keys[i]].minimized) {
-                    focusWindow(keys[i]);
-                    return;
-                }
+                if (!windowData[keys[i]].minimized) { focusWindow(keys[i]); return; }
             }
         }
 
-        // ---- 还原最小化 ----
         function restoreWindow(winId) {
             const data = windowData[winId];
             if (!data || !data.minimized) return;
@@ -1028,12 +1068,10 @@
             updateTaskbar();
         }
 
-        // ---- 最大化/还原 ----
         function toggleMaximize(winId) {
             const data = windowData[winId];
             if (!data) return;
             if (data.isMaximized) {
-                // 还原
                 data.element.classList.remove('maximized');
                 data.element.style.width = data.prevRect.width;
                 data.element.style.height = data.prevRect.height;
@@ -1041,7 +1079,6 @@
                 data.element.style.top = data.prevRect.top;
                 data.isMaximized = false;
             } else {
-                // 最大化
                 data.prevRect = {
                     width: data.element.style.width,
                     height: data.element.style.height,
@@ -1058,7 +1095,6 @@
             updateTaskbar();
         }
 
-        // ---- 更新任务栏 ----
         function updateTaskbar() {
             const container = document.getElementById('taskItems');
             container.innerHTML = '';
@@ -1070,23 +1106,16 @@
                 btn.innerHTML =
                     `${appConfigs[data.app]?.icon || '📱'} ${data.app} <span class="dot"></span>`;
                 btn.addEventListener('click', () => {
-                    if (data.minimized) {
-                        restoreWindow(wid);
-                    } else {
-                        // 如果已激活且未最小化，最小化
-                        if (activeWindowId === wid) {
-                            minimizeWindow(wid);
-                        } else {
-                            focusWindow(wid);
-                        }
-                    }
+                    if (data.minimized) restoreWindow(wid);
+                    else if (activeWindowId === wid) minimizeWindow(wid);
+                    else focusWindow(wid);
                 });
                 container.appendChild(btn);
             }
         }
 
         // ================================================================
-        //  3. 打开应用（桌面图标 + 开始菜单）
+        //  3. 打开应用
         // ================================================================
         function openApp(appName) {
             if (!appConfigs[appName]) return;
@@ -1094,49 +1123,35 @@
             document.getElementById('startMenu').classList.remove('open');
         }
 
-        // ---- 桌面图标点击 ----
         document.querySelectorAll('.desktop-icon').forEach(el => {
-            el.addEventListener('click', () => {
-                const app = el.dataset.app;
-                if (app) openApp(app);
-            });
+            el.addEventListener('click', () => { const app = el.dataset.app; if (app) openApp(app); });
         });
-
-        // ---- 开始菜单点击 ----
         document.querySelectorAll('.app').forEach(el => {
-            el.addEventListener('click', () => {
-                const app = el.dataset.app;
-                if (app) openApp(app);
-            });
+            el.addEventListener('click', () => { const app = el.dataset.app; if (app) openApp(app); });
         });
 
-        // ---- 开始菜单开关 ----
+        // ================================================================
+        //  4. 开始菜单
+        // ================================================================
         const startBtn = document.getElementById('startBtn');
         const startMenu = document.getElementById('startMenu');
         startBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             startMenu.classList.toggle('open');
-            if (startMenu.classList.contains('open')) {
-                document.getElementById('searchBox').focus();
-            }
+            if (startMenu.classList.contains('open')) document.getElementById('searchBox').focus();
         });
         document.addEventListener('click', (e) => {
-            if (!startMenu.contains(e.target) && e.target !== startBtn) {
-                startMenu.classList.remove('open');
-            }
+            if (!startMenu.contains(e.target) && e.target !== startBtn) startMenu.classList.remove('open');
         });
-
-        // ---- 搜索过滤 ----
         document.getElementById('searchBox').addEventListener('input', function() {
             const q = this.value.toLowerCase();
             document.querySelectorAll('#appGrid .app').forEach(el => {
-                const name = el.dataset.app.toLowerCase();
-                el.style.display = name.includes(q) ? '' : 'none';
+                el.style.display = el.dataset.app.toLowerCase().includes(q) ? '' : 'none';
             });
         });
 
         // ================================================================
-        //  4. 右键菜单
+        //  5. 右键菜单（电脑端）
         // ================================================================
         const contextMenu = document.getElementById('contextMenu');
         const desktop = document.getElementById('desktop');
@@ -1144,47 +1159,51 @@
         desktop.addEventListener('contextmenu', (e) => {
             e.preventDefault();
             const rect = desktop.getBoundingClientRect();
-            let x = e.clientX - rect.left;
-            let y = e.clientY - rect.top;
-            // 确保不溢出
+            let x = e.clientX - rect.left,
+                y = e.clientY - rect.top;
             if (x + 200 > rect.width) x = rect.width - 200;
             if (y + 250 > rect.height) y = rect.height - 250;
             contextMenu.style.left = x + 'px';
             contextMenu.style.top = y + 'px';
             contextMenu.style.display = 'block';
         });
-
-        document.addEventListener('click', () => {
-            contextMenu.style.display = 'none';
-        });
-
+        document.addEventListener('click', () => { contextMenu.style.display = 'none'; });
         document.querySelectorAll('.ctx-item').forEach(el => {
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const action = el.dataset.action;
-                switch (action) {
-                    case 'refresh':
-                        // 简单刷新效果
-                        alert('🔄 桌面已刷新');
-                        break;
-                    case 'newfolder':
-                        alert('📁 新建文件夹');
-                        break;
-                    case 'newtxt':
-                        alert('📄 新建文本文档.txt');
-                        break;
-                    case 'taskmgr':
-                        openApp('任务管理器');
-                        break;
-                }
+                if (action === 'refresh') alert('🔄 桌面已刷新');
+                else if (action === 'newfolder') alert('📁 新建文件夹');
+                else if (action === 'newtxt') alert('📄 新建文本文档.txt');
+                else if (action === 'taskmgr') openApp('任务管理器');
                 contextMenu.style.display = 'none';
             });
         });
 
         // ================================================================
-        //  5. 窗口右键关闭（防误触）
+        //  6. 手机端长按触发右键菜单
         // ================================================================
-        // 按 ESC 关闭开始菜单
+        let longPressTimer = null;
+        desktop.addEventListener('touchstart', (e) => {
+            longPressTimer = setTimeout(() => {
+                const touch = e.touches[0];
+                const rect = desktop.getBoundingClientRect();
+                let x = touch.clientX - rect.left,
+                    y = touch.clientY - rect.top;
+                if (x + 200 > rect.width) x = rect.width - 200;
+                if (y + 250 > rect.height) y = rect.height - 250;
+                contextMenu.style.left = x + 'px';
+                contextMenu.style.top = y + 'px';
+                contextMenu.style.display = 'block';
+                e.preventDefault();
+            }, 600);
+        }, { passive: true });
+        desktop.addEventListener('touchend', () => { clearTimeout(longPressTimer); });
+        desktop.addEventListener('touchmove', () => { clearTimeout(longPressTimer); });
+
+        // ================================================================
+        //  7. ESC 关闭菜单
+        // ================================================================
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 startMenu.classList.remove('open');
@@ -1193,7 +1212,7 @@
         });
 
         console.log('✅ Windows 11 动态模拟已启动！');
-        console.log('📌 支持: 拖拽窗口 | 最大化/最小化/关闭 | 开始菜单 | 任务栏切换 | 右键菜单');
+        console.log('📌 支持: 动态壁纸 | 窗口拖拽 | 最大化/最小化/关闭 | 开始菜单 | 右键菜单 | 长按触控');
     </script>
 
 </body>
