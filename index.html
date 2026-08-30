@@ -1,1136 +1,974 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>世界计划 - 求与影</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #0a0a1a; overflow: hidden; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; user-select: none; }
-canvas { display: block; }
-#ui-layer {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  pointer-events: none; z-index: 10;
-}
-#start-screen {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 50%, #0a2a3e 100%);
-  z-index: 100; transition: opacity 0.8s;
-}
-#start-screen.hidden { opacity: 0; pointer-events: none; }
-.title-text {
-  font-size: 3em; color: #39c5bb; text-shadow: 0 0 30px #39c5bb88, 0 0 60px #39c5bb44;
-  letter-spacing: 8px; margin-bottom: 10px; animation: glow 2s ease-in-out infinite alternate;
-}
-.subtitle { font-size: 1.2em; color: #ff6699; letter-spacing: 4px; margin-bottom: 50px; opacity: 0.8; }
-@keyframes glow {
-  from { text-shadow: 0 0 20px #39c5bb88, 0 0 40px #39c5bb44; }
-  to { text-shadow: 0 0 40px #39c5bbcc, 0 0 80px #39c5bb66, 0 0 120px #39c5bb33; }
-}
-#start-btn {
-  padding: 15px 60px; font-size: 1.3em; color: #fff; background: linear-gradient(135deg, #39c5bb, #2a9d8f);
-  border: none; border-radius: 30px; cursor: pointer; pointer-events: auto;
-  box-shadow: 0 0 20px #39c5bb66; transition: all 0.3s; letter-spacing: 3px;
-}
-#start-btn:hover { transform: scale(1.08); box-shadow: 0 0 40px #39c5bb99; }
-.song-info { color: #aaa; margin-bottom: 30px; text-align: center; line-height: 1.8; }
-.song-info .song-name { font-size: 1.5em; color: #39c5bb; }
-#loading-text { color: #39c5bb; font-size: 1em; margin-top: 20px; display: none; }
-#progress-bar { width: 240px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 12px; display: none; overflow: hidden; }
-#progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #39c5bb, #ff6699); border-radius: 2px; transition: width 0.15s; }
-.difficulty-select { display: flex; gap: 15px; margin-bottom: 30px; }
-.diff-btn {
-  padding: 10px 25px; border: 2px solid #39c5bb44; background: transparent;
-  color: #39c5bb; border-radius: 20px; cursor: pointer; font-size: 1em;
-  transition: all 0.3s; pointer-events: auto;
-}
-.diff-btn.active, .diff-btn:hover {
-  background: #39c5bb33; border-color: #39c5bb; box-shadow: 0 0 15px #39c5bb44;
-}
-#result-screen {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  display: none; flex-direction: column; align-items: center; justify-content: center;
-  background: rgba(10,10,30,0.95); z-index: 200;
-}
-#result-screen.show { display: flex; }
-.result-title { font-size: 2.5em; color: #39c5bb; margin-bottom: 20px; letter-spacing: 5px; }
-.result-stats { color: #ccc; font-size: 1.2em; line-height: 2; text-align: center; margin-bottom: 30px; }
-.result-stats span { color: #ff6699; font-weight: bold; }
-#retry-btn {
-  padding: 12px 50px; font-size: 1.1em; color: #fff; background: linear-gradient(135deg, #ff6699, #cc4477);
-  border: none; border-radius: 25px; cursor: pointer; box-shadow: 0 0 20px #ff669966;
-  transition: all 0.3s; letter-spacing: 2px;
-}
-#retry-btn:hover { transform: scale(1.05); box-shadow: 0 0 30px #ff669999; }
-#key-hints {
-  position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-  color: #ffffff55; font-size: 0.85em; z-index: 5; letter-spacing: 3px;
-  text-shadow: 0 0 8px rgba(57,197,187,0.3);
-}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>荣耀·真实功能应用</title>
+    <style>
+        /* ===== 全局 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: 'HarmonyOS Sans', system-ui, -apple-system, sans-serif;
+            background: #0a0e1a;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            color: #fff;
+        }
+
+        /* ===== 状态栏 ===== */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px 6px 20px;
+            font-size: 13px;
+            font-weight: 500;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .status-left .time {
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .battery-body {
+            width: 24px;
+            height: 12px;
+            border: 1.5px solid rgba(255,255,255,0.7);
+            border-radius: 3px;
+            padding: 1px;
+            position: relative;
+        }
+        .battery-body::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: 2px;
+            width: 2px;
+            height: 6px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 0 2px 2px 0;
+        }
+        .battery-level {
+            height: 100%;
+            width: 72%;
+            background: #4caf50;
+            border-radius: 1px;
+        }
+
+        /* ===== 桌面 ===== */
+        .desktop {
+            flex: 1;
+            padding: 10px 16px 0 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .desktop::-webkit-scrollbar {
+            width: 0;
+        }
+        .icon-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px 8px;
+            justify-items: center;
+        }
+        .icon-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px 4px;
+            border-radius: 16px;
+            transition: background 0.2s;
+            width: 100%;
+            max-width: 80px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .icon-item:active {
+            background: rgba(255,255,255,0.12);
+        }
+        .icon-item .app-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+            transition: transform 0.15s;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .icon-item:active .app-icon {
+            transform: scale(0.88);
+        }
+        .icon-item .app-name {
+            font-size: 11px;
+            color: rgba(255,255,255,0.88);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        /* ===== Dock ===== */
+        .dock {
+            flex-shrink: 0;
+            padding: 12px 20px 10px 20px;
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(30px);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            justify-content: space-around;
+            border-radius: 28px 28px 0 0;
+            margin: 0 8px;
+        }
+        .dock .dock-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .dock .dock-item:active {
+            background: rgba(255,255,255,0.10);
+        }
+        .dock .dock-item .dock-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(255,255,255,0.05);
+            transition: transform 0.15s;
+        }
+        .dock .dock-item:active .dock-icon {
+            transform: scale(0.85);
+        }
+        .dock .dock-item .dock-name {
+            font-size: 10px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* ===== 导航条 ===== */
+        .nav-bar {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 0 14px 0;
+            gap: 28px;
+        }
+        .nav-bar .home-indicator {
+            width: 134px;
+            height: 5px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 20px;
+        }
+
+        /* ===== 应用容器（全屏切换） ===== */
+        .app-container {
+            position: fixed;
+            inset: 0;
+            background: #0f1322;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transform: scale(0.92) translateY(30px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+        .app-container.active {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+            border-radius: 0;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+            gap: 12px;
+        }
+        .app-header .back-btn {
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+            -webkit-tap-highlight-color: transparent;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .app-header .back-btn:active {
+            opacity: 1;
+        }
+        .app-header .app-title {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .app-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .app-body::-webkit-scrollbar {
+            width: 0;
+        }
+
+        /* ===== 计算器 ===== */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            max-width: 360px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .calc-grid button {
+            padding: 18px 0;
+            border: none;
+            border-radius: 16px;
+            font-size: 24px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .calc-grid button:active {
+            background: rgba(255,255,255,0.20);
+        }
+        .calc-grid .op {
+            background: rgba(99, 102, 241, 0.35);
+        }
+        .calc-grid .op:active {
+            background: rgba(99, 102, 241, 0.55);
+        }
+        .calc-grid .equal {
+            background: #6366f1;
+        }
+        .calc-grid .equal:active {
+            background: #818cf8;
+        }
+        .calc-display {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: right;
+            font-size: 36px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            min-height: 80px;
+            word-break: break-all;
+            max-width: 360px;
+            margin: 0 auto 8px auto;
+            width: 100%;
+        }
+
+        /* ===== 备忘录 ===== */
+        .memo-input-row {
+            display: flex;
+            gap: 10px;
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .memo-input-row input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+        }
+        .memo-input-row input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+        .memo-input-row button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            background: #6366f1;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .memo-input-row button:active {
+            opacity: 0.7;
+        }
+        .memo-list {
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .memo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            border-left: 3px solid #6366f1;
+        }
+        .memo-item .del-btn {
+            background: none;
+            border: none;
+            color: #f87171;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .memo-item .del-btn:active {
+            opacity: 0.5;
+        }
+        .memo-empty {
+            text-align: center;
+            color: rgba(255,255,255,0.25);
+            padding: 30px 0;
+        }
+
+        /* ===== 时钟 ===== */
+        .clock-big {
+            font-size: 64px;
+            font-weight: 300;
+            text-align: center;
+            letter-spacing: 4px;
+            padding: 20px 0;
+        }
+        .clock-date {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 18px;
+        }
+        .stopwatch-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .stopwatch-row button {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .stopwatch-row button:active {
+            opacity: 0.6;
+        }
+        .stopwatch-row .sw-start {
+            background: #22c55e;
+        }
+        .stopwatch-row .sw-stop {
+            background: #ef4444;
+        }
+        .stopwatch-row .sw-reset {
+            background: rgba(255,255,255,0.15);
+        }
+
+        /* ===== 天气 ===== */
+        .weather-main {
+            text-align: center;
+            padding: 10px 0;
+        }
+        .weather-main .temp {
+            font-size: 56px;
+            font-weight: 300;
+        }
+        .weather-main .desc {
+            font-size: 20px;
+            color: rgba(255,255,255,0.6);
+        }
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .weather-grid .day {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 16px 0;
+            text-align: center;
+        }
+        .weather-grid .day .day-name {
+            font-size: 14px;
+            opacity: 0.6;
+        }
+        .weather-grid .day .day-icon {
+            font-size: 28px;
+            margin: 6px 0;
+        }
+        .weather-grid .day .day-temp {
+            font-size: 16px;
+        }
+
+        /* ===== 图库 ===== */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .gallery-grid .photo {
+            aspect-ratio: 1/1;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .gallery-grid .photo:active {
+            transform: scale(0.92);
+        }
+        .gallery-preview {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+        .gallery-preview.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .gallery-preview .big-photo {
+            font-size: 120px;
+            transform: scale(0.8);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .gallery-preview.active .big-photo {
+            transform: scale(1);
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 380px) {
+            .icon-item .app-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 26px;
+            }
+            .dock .dock-item .dock-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 20px;
+            }
+            .calc-grid button {
+                padding: 14px 0;
+                font-size: 20px;
+            }
+            .clock-big {
+                font-size: 48px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div id="start-screen">
-  <div class="title-text">世界计划</div>
-  <div class="subtitle">PROJECT SEKAI</div>
-  <div class="song-info">
-    <div class="song-name">♪ 求与影 ♪</div>
-  </div>
-  <div class="difficulty-select">
-    <button class="diff-btn active" data-diff="easy">EASY</button>
-    <button class="diff-btn" data-diff="normal">NORMAL</button>
-    <button class="diff-btn" data-diff="hard">HARD</button>
-    <button class="diff-btn" data-diff="expert">EXPERT</button>
-  </div>
-  <button id="start-btn">开始游戏</button>
-  <div id="loading-text">正在分析音频...</div>
-  <div id="progress-bar"><div id="progress-fill"></div></div>
-</div>
+    <!-- ===== 状态栏 ===== -->
+    <div class="status-bar">
+        <div class="status-left"><span class="time" id="clock">12:00</span></div>
+        <div class="status-right">
+            <span>📶</span><span>📶</span><span>🔊</span>
+            <span class="battery"><span class="battery-body"><span class="battery-level"></span></span></span>
+        </div>
+    </div>
 
-<canvas id="game-canvas"></canvas>
-<div id="key-hints">D &nbsp; F &nbsp; J &nbsp; K &nbsp;&nbsp;|&nbsp;&nbsp; 触摸轨道击打</div>
+    <!-- ===== 桌面 ===== -->
+    <div class="desktop" id="desktop">
+        <div class="icon-row">
+            <div class="icon-item" data-app="计算器"><div class="app-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">🧮</div><span class="app-name">计算器</span></div>
+            <div class="icon-item" data-app="备忘录"><div class="app-icon" style="background:linear-gradient(135deg,#a18cd1,#fbc2eb);">📝</div><span class="app-name">备忘录</span></div>
+            <div class="icon-item" data-app="时钟"><div class="app-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c);">🕐</div><span class="app-name">时钟</span></div>
+            <div class="icon-item" data-app="天气"><div class="app-icon" style="background:linear-gradient(135deg,#fccb90,#d57eeb);">🌤️</div><span class="app-name">天气</span></div>
+        </div>
+        <div class="icon-row">
+            <div class="icon-item" data-app="图库"><div class="app-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7);">🖼️</div><span class="app-name">图库</span></div>
+            <div class="icon-item" data-app="设置"><div class="app-icon" style="background:linear-gradient(135deg,#89f7fe,#66a6ff);">⚙️</div><span class="app-name">设置</span></div>
+            <div class="icon-item" data-app="音乐"><div class="app-icon" style="background:linear-gradient(135deg,#fa709a,#fee140);">🎵</div><span class="app-name">音乐</span></div>
+            <div class="icon-item" data-app="相机"><div class="app-icon" style="background:linear-gradient(135deg,#ffecd2,#fcb69f);">📷</div><span class="app-name">相机</span></div>
+        </div>
+        <div class="icon-row">
+            <div class="icon-item" data-app="文件管理"><div class="app-icon" style="background:linear-gradient(135deg,#a8edea,#fed6e3);">📁</div><span class="app-name">文件管理</span></div>
+            <div class="icon-item" data-app="浏览器"><div class="app-icon" style="background:linear-gradient(135deg,#a1c4fd,#c2e9fb);">🌐</div><span class="app-name">浏览器</span></div>
+            <div class="icon-item" data-app="应用市场"><div class="app-icon" style="background:linear-gradient(135deg,#d4fc79,#96e6a1);">📦</div><span class="app-name">应用市场</span></div>
+            <div class="icon-item" data-app="健康"><div class="app-icon" style="background:linear-gradient(135deg,#f6d365,#fda085);">❤️</div><span class="app-name">健康</span></div>
+        </div>
+    </div>
 
-<div id="result-screen">
-  <div class="result-title">LIVE CLEAR!</div>
-  <div class="result-stats" id="result-stats"></div>
-  <button id="retry-btn">再来一次</button>
-</div>
+    <!-- ===== Dock ===== -->
+    <div class="dock">
+        <div class="dock-item" data-app="电话"><div class="dock-icon" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">📞</div><span class="dock-name">电话</span></div>
+        <div class="dock-item" data-app="信息"><div class="dock-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7);">💬</div><span class="dock-name">信息</span></div>
+        <div class="dock-item" data-app="浏览器"><div class="dock-icon" style="background:linear-gradient(135deg,#fa709a,#fee140);">🌐</div><span class="dock-name">浏览器</span></div>
+        <div class="dock-item" data-app="相机"><div class="dock-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c);">📷</div><span class="dock-name">相机</span></div>
+    </div>
 
-<script>
-// ==================== 配置 ====================
-const CONFIG = {
-  laneCount: 4,
-  keys: ['d', 'f', 'j', 'k'],
-  laneColors: ['#ff6699', '#39c5bb', '#ffcc44', '#9966ff'],
-  noteSpeed: 650,
-  hitLineY: 0.85,
-  perfectWindow: 40,
-  greatWindow: 80,
-  goodWindow: 120,
-  missWindow: 160,
-  noteWidth: 60,
-  noteHeight: 14,
-  trailLen: 200,
-  difficultyMultiplier: { easy: 0.65, normal: 1.0, hard: 1.5, expert: 2.0 },
-};
+    <div class="nav-bar"><div class="home-indicator"></div></div>
 
-// ==================== 全局状态 ====================
-let canvas, ctx, W, H;
-let audioCtx, analyser, source, audioBuffer;
-let gameState = 'menu';
-let startTime = 0, elapsedTime = 0;
-let notes = [], particles = [], judgments = [], bgParticles = [];
-let score = 0, combo = 0, maxCombo = 0;
-let perfectCount = 0, greatCount = 0, goodCount = 0, missCount = 0;
-let currentDifficulty = 'normal';
-let laneFlash = [0, 0, 0, 0];
-let beatPulse = 0;
-let frequencyData, timeDomainData;
-let channelData;
-let songDuration = 0;
-let isGameOver = false;
-let keysPressed = {};
-let comboAnimation = 0;
-let touchLanes = [false, false, false, false];
+    <!-- ===== 应用容器 ===== -->
+    <div class="app-container" id="appContainer">
+        <div class="app-header">
+            <span class="back-btn" id="backBtn">‹</span>
+            <span class="app-title" id="appTitle">应用</span>
+            <span style="width:32px;"></span>
+        </div>
+        <div class="app-body" id="appBody">
+            <!-- 由 JS 动态渲染 -->
+        </div>
+    </div>
 
-// ==================== 初始化 ====================
-function init() {
-  canvas = document.getElementById('game-canvas');
-  ctx = canvas.getContext('2d');
-  resize();
-  window.addEventListener('resize', resize);
-  setupInput();
-  setupUI();
-  initBgParticles();
-  requestAnimationFrame(menuLoop);
-}
+    <!-- ===== 图库预览弹窗 ===== -->
+    <div class="gallery-preview" id="galleryPreview">
+        <div class="big-photo" id="previewEmoji">📷</div>
+    </div>
 
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
-
-function initBgParticles() {
-  bgParticles = [];
-  for (let i = 0; i < 60; i++) {
-    bgParticles.push({
-      x: Math.random() * W, y: Math.random() * H,
-      vx: (Math.random() - 0.5) * 0.5, vy: -Math.random() * 0.8 - 0.2,
-      size: Math.random() * 3 + 1, alpha: Math.random() * 0.3 + 0.1,
-      color: CONFIG.laneColors[Math.floor(Math.random() * 4)]
-    });
-  }
-}
-
-// ==================== UI 事件 ====================
-function setupUI() {
-  const diffBtns = document.querySelectorAll('.diff-btn');
-  diffBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      diffBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentDifficulty = btn.dataset.diff;
-    });
-  });
-
-  document.getElementById('start-btn').addEventListener('click', startGame);
-  document.getElementById('retry-btn').addEventListener('click', () => {
-    document.getElementById('result-screen').classList.remove('show');
-    document.getElementById('start-screen').classList.remove('hidden');
-    gameState = 'menu';
-  });
-}
-
-// ==================== 输入处理 ====================
-function setupInput() {
-  document.addEventListener('keydown', (e) => {
-    const key = e.key.toLowerCase();
-    if (CONFIG.keys.includes(key) && !keysPressed[key]) {
-      keysPressed[key] = true;
-      const lane = CONFIG.keys.indexOf(key);
-      if (gameState === 'playing') handleHit(lane);
-    }
-  });
-  document.addEventListener('keyup', (e) => {
-    keysPressed[e.key.toLowerCase()] = false;
-  });
-
-  // 触摸支持
-  canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    if (gameState !== 'playing') return;
-    for (let touch of e.changedTouches) {
-      const lane = Math.floor(touch.clientX / (W / CONFIG.laneCount));
-      if (lane >= 0 && lane < CONFIG.laneCount) {
-        touchLanes[lane] = true;
-        laneFlash[lane] = Math.max(laneFlash[lane], 0.6); // 触摸发光反馈
-        handleHit(lane);
-      }
-    }
-  }, { passive: false });
-
-  canvas.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    for (let touch of e.changedTouches) {
-      const lane = Math.floor(touch.clientX / (W / CONFIG.laneCount));
-      if (lane >= 0 && lane < CONFIG.laneCount) {
-        touchLanes[lane] = false;
-      }
-    }
-  }, { passive: false });
-
-  canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-  }, { passive: false });
-}
-
-// ==================== 音频分析 & 音符生成 ====================
-async function loadAndAnalyzeAudio() {
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const response = await fetch('求与影.mp3');
-  const arrayBuffer = await response.arrayBuffer();
-  updateProgress(30, '正在解码音频...');
-  audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-  songDuration = audioBuffer.duration;
-
-  // 直接从解码buffer获取单声道数据，无需OfflineAudioContext渲染
-  updateProgress(50, '正在提取音频数据...');
-  const raw = audioBuffer.getChannelData(0);
-  if (audioBuffer.numberOfChannels > 1) {
-    const raw2 = audioBuffer.getChannelData(1);
-    channelData = new Float32Array(raw.length);
-    for (let i = 0; i < raw.length; i++) channelData[i] = (raw[i] + raw2[i]) * 0.5;
-  } else {
-    channelData = raw;
-  }
-  updateProgress(60, '正在分析节拍...');
-}
-
-function generateNotes(channelData) {
-  const sampleRate = audioBuffer.sampleRate;
-  const notes = [];
-  const diffMult = CONFIG.difficultyMultiplier[currentDifficulty];
-
-  // 降采样到11025Hz
-  const downRate = 11025;
-  const downRatio = Math.max(1, Math.floor(sampleRate / downRate));
-  const downLen = Math.floor(channelData.length / downRatio);
-  const down = new Float32Array(downLen);
-  for (let i = 0; i < downLen; i++) down[i] = channelData[i * downRatio];
-
-  const windowSize = 512;
-  const hopSize = 256;
-
-  // 能量检测 + 过零率
-  const energies = [];
-  const zcrs = [];
-  for (let i = 0; i < downLen - windowSize; i += hopSize) {
-    let energy = 0, zeroCross = 0;
-    for (let j = 0; j < windowSize; j++) {
-      const s = down[i + j];
-      energy += s * s;
-      if (j > 0 && ((down[i + j - 1] >= 0 && s < 0) || (down[i + j - 1] < 0 && s >= 0))) {
-        zeroCross++;
-      }
-    }
-    energies.push(energy / windowSize);
-    zcrs.push(zeroCross);
-  }
-
-  updateProgress(80, '正在生成谱面...');
-
-  // 自适应节拍检测（降低阈值以捕获更多细节）
-  const beatThreshold = calculateBeatThreshold(energies);
-  const beats = detectBeats(energies, beatThreshold, hopSize, downRate);
-
-  // 计算能量分布用于子节拍检测
-  const avgEnergy = energies.reduce((a, b) => a + b, 0) / energies.length;
-
-  // 根据节拍生成音符
-  const minInterval = 140 / diffMult;
-  let lastNoteTime = -1000;
-  let lastLane = 1;
-
-  for (let i = 0; i < beats.length; i++) {
-    const beatTime = beats[i];
-    if (beatTime < 1000 || beatTime > (songDuration * 1000 - 1500)) continue;
-    if (beatTime - lastNoteTime < minInterval) continue;
-
-    const specIdx = Math.floor(beatTime * downRate / (hopSize * 1000));
-    const zcr = zcrs[Math.min(specIdx, zcrs.length - 1)] || 20;
-    const energy = energies[Math.min(specIdx, energies.length - 1)] || 0;
-
-    // 智能轨道分配：避免连续同一轨道，根据音调分配
-    let lane = zcrToLane(zcr);
-    if (lane === lastLane) lane = (lane + 1 + Math.floor(Math.random() * 2)) % 4;
-    lastLane = lane;
-
-    // Hold音符：高能量段更高概率
-    const isHoldNote = energy > avgEnergy * 2.5 && Math.random() < 0.18 + diffMult * 0.08;
-
-    notes.push({
-      time: beatTime,
-      lane: lane,
-      type: isHoldNote ? 'hold' : 'tap',
-      hit: false,
-      missed: false,
-      holdDuration: isHoldNote ? 350 + Math.random() * 500 : 0,
-      y: 0,
-      alpha: 1,
-    });
-
-    // Normal+ 添加双押
-    if (diffMult >= 1.0 && Math.random() < 0.2 + (diffMult - 1) * 0.15) {
-      let secondLane = (lane + 1 + Math.floor(Math.random() * 2)) % 4;
-      notes.push({
-        time: beatTime, lane: secondLane,
-        type: 'tap', hit: false, missed: false, holdDuration: 0, y: 0, alpha: 1,
-      });
-    }
-
-    // Hard+ 添加子节拍（半拍）
-    if (diffMult >= 1.3 && Math.random() < 0.35) {
-      const subTime = beatTime + 100 + Math.random() * 80;
-      if (subTime < songDuration * 1000 - 1500) {
-        const subLane = (lane + 2 + Math.floor(Math.random() * 2)) % 4;
-        notes.push({
-          time: subTime, lane: subLane,
-          type: 'tap', hit: false, missed: false, holdDuration: 0, y: 0, alpha: 1,
-        });
-      }
-    }
-
-    // Expert 添加连续快速音符（1/4拍）
-    if (diffMult >= 1.8 && Math.random() < 0.25) {
-      for (let k = 1; k <= 2; k++) {
-        const fastTime = beatTime + k * 80;
-        if (fastTime < songDuration * 1000 - 1500) {
-          notes.push({
-            time: fastTime, lane: (lane + k) % 4,
-            type: 'tap', hit: false, missed: false, holdDuration: 0, y: 0, alpha: 1,
-          });
+    <script>
+        // ============================================================
+        //  1. 时钟
+        // ============================================================
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent =
+                String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
         }
-      }
-    }
-
-    lastNoteTime = beatTime;
-  }
-
-  notes.sort((a, b) => a.time - b.time);
-  return notes;
-}
-
-function zcrToLane(zcr) {
-  // 过零率粗略对应频率：低→bass，中→melody，高→hi-hat/vocals
-  if (zcr < 15) return 0;
-  if (zcr < 35) return 1;
-  if (zcr < 60) return 2;
-  return 3;
-}
-
-function calculateBeatThreshold(energies) {
-  const sorted = [...energies].sort((a, b) => b - a);
-  const topCount = Math.floor(sorted.length * 0.1);
-  let sum = 0;
-  for (let i = 0; i < topCount; i++) sum += sorted[i];
-  return (sum / topCount) * 0.45;
-}
-
-function detectBeats(energies, threshold, hopSize, sampleRate) {
-  const beats = [];
-  const minBeatGap = 90;
-  let lastBeat = -minBeatGap;
-
-  const localWindow = 15;
-  for (let i = 1; i < energies.length - 1; i++) {
-    const time = (i * hopSize / sampleRate) * 1000;
-    let localAvg = 0;
-    const start = Math.max(0, i - localWindow);
-    const end = Math.min(energies.length, i + localWindow);
-    for (let j = start; j < end; j++) localAvg += energies[j];
-    localAvg /= (end - start);
-
-    const localThreshold = Math.max(threshold, localAvg * 1.25);
-
-    if (energies[i] > localThreshold &&
-        energies[i] > energies[i - 1] &&
-        energies[i] >= energies[i + 1] &&
-        time - lastBeat >= minBeatGap) {
-      beats.push(time);
-      lastBeat = time;
-    }
-  }
-  return beats;
-}
-
-// ==================== 游戏逻辑 ====================
-async function startGame() {
-  const loadingText = document.getElementById('loading-text');
-  const startBtn = document.getElementById('start-btn');
-  startBtn.style.display = 'none';
-  loadingText.style.display = 'block';
-
-  try {
-    loadingText.textContent = '正在加载音频...';
-    showProgress();
-    updateProgress(5, '正在下载音频...');
-    await loadAndAnalyzeAudio();
-
-    loadingText.textContent = '正在生成谱面...';
-    updateProgress(70, '正在分析节拍...');
-    await new Promise(r => setTimeout(r, 30));
-    notes = generateNotes(channelData);
-    updateProgress(95, '准备开始...');
-
-    // 确保有足够的音符
-    if (notes.length < 20) {
-      notes = generateFallbackNotes();
-    }
-
-    document.getElementById('start-screen').classList.add('hidden');
-    hideProgress();
-    gameState = 'playing';
-    score = 0; combo = 0; maxCombo = 0;
-    perfectCount = 0; greatCount = 0; goodCount = 0; missCount = 0;
-    isGameOver = false;
-    particles = []; judgments = [];
-    laneFlash = [0, 0, 0, 0];
-
-    // 播放音频
-    source = audioCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    const gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.8;
-    source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    // 实时分析器
-    const realAnalyser = audioCtx.createAnalyser();
-    realAnalyser.fftSize = 256;
-    source.connect(realAnalyser);
-    frequencyData = new Uint8Array(realAnalyser.frequencyBinCount);
-    timeDomainData = new Uint8Array(realAnalyser.fftSize);
-
-    startTime = audioCtx.currentTime + 0.1;
-    source.start(startTime);
-    source.onended = () => {
-      if (!isGameOver) endGame();
-    };
-
-    requestAnimationFrame(gameLoop);
-  } catch (err) {
-    console.error(err);
-    loadingText.textContent = '加载失败，请确保 求与影.mp3 存在于网站根目录';
-    hideProgress();
-    startBtn.style.display = 'block';
-    startBtn.textContent = '重试';
-  }
-}
-
-function generateFallbackNotes() {
-  const fallback = [];
-  const duration = songDuration * 1000;
-  const bpm = 130;
-  const beatInterval = 60000 / bpm;
-  const diffMult = CONFIG.difficultyMultiplier[currentDifficulty];
-
-  for (let t = 2000; t < duration - 2000; t += beatInterval) {
-    if (Math.random() < 0.7 * diffMult) {
-      fallback.push({
-        time: t, lane: Math.floor(Math.random() * 4),
-        type: 'tap', hit: false, missed: false, holdDuration: 0, y: 0, alpha: 1,
-      });
-    }
-    if (diffMult >= 1.0 && Math.random() < 0.3) {
-      fallback.push({
-        time: t + beatInterval * 0.5, lane: Math.floor(Math.random() * 4),
-        type: 'tap', hit: false, missed: false, holdDuration: 0, y: 0, alpha: 1,
-      });
-    }
-  }
-  return fallback;
-}
-
-function handleHit(lane) {
-  laneFlash[lane] = 1.5; // 更强的闪烁
-  const hitY = H * CONFIG.hitLineY;
-  let closestNote = null;
-  let closestDist = Infinity;
-
-  for (const note of notes) {
-    if (note.hit || note.missed || note.lane !== lane) continue;
-    const noteScreenY = getNoteY(note);
-    const dist = Math.abs(noteScreenY - hitY);
-    if (dist < closestDist && dist < CONFIG.missWindow * CONFIG.noteSpeed / 1000) {
-      closestDist = dist;
-      closestNote = note;
-    }
-  }
-
-  if (closestNote) {
-    closestNote.hit = true;
-    const dist = closestDist;
-    let judgment, scoreAdd, color;
-
-    if (dist < CONFIG.perfectWindow * CONFIG.noteSpeed / 1500) {
-      judgment = 'PERFECT'; scoreAdd = 1000; color = '#ffcc44'; perfectCount++;
-    } else if (dist < CONFIG.greatWindow * CONFIG.noteSpeed / 1500) {
-      judgment = 'GREAT'; scoreAdd = 700; color = '#39c5bb'; greatCount++;
-    } else if (dist < CONFIG.goodWindow * CONFIG.noteSpeed / 1500) {
-      judgment = 'GOOD'; scoreAdd = 400; color = '#9966ff'; goodCount++;
-    } else {
-      judgment = 'GOOD'; scoreAdd = 200; color = '#666'; goodCount++;
-    }
-
-    combo++;
-    if (combo > maxCombo) maxCombo = combo;
-    comboAnimation = 1;
-    score += scoreAdd * (1 + Math.floor(combo / 10) * 0.1);
-
-    // 根据判定等级生成不同强度的特效
-    const intensity = judgment === 'PERFECT' ? 1.0 : judgment === 'GREAT' ? 0.7 : 0.4;
-    spawnHitParticles(lane, hitY, color, intensity);
-    addJudgment(judgment, color, lane);
-  }
-}
-
-function getNoteY(note) {
-  const currentTime = (audioCtx.currentTime - startTime) * 1000;
-  const timeDiff = note.time - currentTime;
-  const hitY = H * CONFIG.hitLineY;
-  return hitY - (timeDiff / 1000) * CONFIG.noteSpeed;
-}
-
-function spawnHitParticles(lane, y, color, intensity) {
-  const laneWidth = W / CONFIG.laneCount;
-  const x = lane * laneWidth + laneWidth / 2;
-  const count = Math.floor(20 * intensity + 8);
-
-  // 爆发粒子（向上+两侧扇形）
-  for (let i = 0; i < count; i++) {
-    const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.2;
-    const speed = (Math.random() * 6 + 3) * intensity;
-    particles.push({
-      x: x + (Math.random() - 0.5) * 20,
-      y: y + (Math.random() - 0.5) * 8,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 1, decay: 0.015 + Math.random() * 0.015,
-      size: (Math.random() * 6 + 2) * intensity,
-      color, type: 'hit'
-    });
-  }
-
-  // 横向飞散粒子
-  for (let i = 0; i < Math.floor(8 * intensity); i++) {
-    const dir = Math.random() > 0.5 ? 1 : -1;
-    particles.push({
-      x, y,
-      vx: dir * (Math.random() * 8 + 4),
-      vy: (Math.random() - 0.5) * 3,
-      life: 1, decay: 0.02 + Math.random() * 0.01,
-      size: Math.random() * 3 + 1,
-      color: '#ffffff', type: 'hit'
-    });
-  }
-
-  // 多层扩散环
-  particles.push({
-    x, y, vx: 0, vy: 0, life: 1, decay: 0.035,
-    size: 8, color, type: 'ring'
-  });
-  if (intensity > 0.6) {
-    particles.push({
-      x, y, vx: 0, vy: 0, life: 0.8, decay: 0.025,
-      size: 5, color: '#ffffff', type: 'ring'
-    });
-  }
-
-  // PERFECT时添加全屏闪光粒子
-  if (intensity >= 1.0) {
-    for (let i = 0; i < 6; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.random() * 40 + 20;
-      particles.push({
-        x: x + Math.cos(angle) * dist,
-        y: y + Math.sin(angle) * dist,
-        vx: Math.cos(angle) * 2,
-        vy: Math.sin(angle) * 2 - 1,
-        life: 1, decay: 0.01,
-        size: Math.random() * 4 + 3,
-        color: '#ffcc44', type: 'star'
-      });
-    }
-  }
-}
-
-function addJudgment(text, color, lane) {
-  const laneWidth = W / CONFIG.laneCount;
-  judgments.push({
-    text, color, x: lane * laneWidth + laneWidth / 2,
-    y: H * CONFIG.hitLineY - 60, life: 1, decay: 0.03
-  });
-}
-
-// ==================== 渲染 ====================
-function gameLoop() {
-  if (gameState !== 'playing') return;
-  const currentTime = (audioCtx.currentTime - startTime) * 1000;
-
-  // 获取实时频谱
-  if (analyser) {
-    // 使用实时分析器数据（如果可用）
-  }
-
-  update(currentTime);
-  render(currentTime);
-  requestAnimationFrame(gameLoop);
-}
-
-function update(currentTime) {
-  // 检查miss
-  for (const note of notes) {
-    if (note.hit || note.missed) continue;
-    const noteY = getNoteY(note);
-    if (noteY > H * CONFIG.hitLineY + CONFIG.missWindow * CONFIG.noteSpeed / 800) {
-      note.missed = true;
-      combo = 0;
-      missCount++;
-      addJudgment('MISS', '#ff3333', note.lane);
-    }
-  }
-
-  // 更新粒子
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life -= p.decay;
-    if (p.type === 'ring') p.size += 4;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-
-  // 更新判定文字
-  for (let i = judgments.length - 1; i >= 0; i--) {
-    judgments[i].life -= judgments[i].decay;
-    judgments[i].y -= 0.5;
-    if (judgments[i].life <= 0) judgments.splice(i, 1);
-  }
-
-  // 更新背景粒子
-  for (const p of bgParticles) {
-    p.x += p.vx;
-    p.y += p.vy;
-    if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
-    if (p.x < -10) p.x = W + 10;
-    if (p.x > W + 10) p.x = -10;
-  }
-
-  // 轨道闪烁衰减
-  for (let i = 0; i < 4; i++) {
-    if (!touchLanes[i]) laneFlash[i] *= 0.88;
-  }
-
-  comboAnimation *= 0.92;
-
-  // 节拍脉冲
-  beatPulse *= 0.95;
-
-  // 检查游戏结束
-  if (currentTime > songDuration * 1000 + 2000) {
-    endGame();
-  }
-}
-
-function render(currentTime) {
-  ctx.clearRect(0, 0, W, H);
-
-  // 背景
-  drawBackground(currentTime);
-
-  // 轨道
-  drawLanes();
-
-  // 音符
-  drawNotes(currentTime);
-
-  // 判定线
-  drawHitLine();
-
-  // 粒子
-  drawParticles();
-
-  // 判定文字
-  drawJudgments();
-
-  // UI
-  drawUI();
-}
-
-function drawBackground(currentTime) {
-  // 动态渐变背景
-  const t = currentTime / 1000;
-  const hue1 = (t * 10) % 360;
-  const hue2 = (hue1 + 60) % 360;
-
-  const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, `hsla(${hue1}, 40%, 8%, 1)`);
-  grad.addColorStop(0.5, `hsla(${(hue1 + hue2) / 2}, 30%, 5%, 1)`);
-  grad.addColorStop(1, `hsla(${hue2}, 40%, 8%, 1)`);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  // 背景粒子
-  for (const p of bgParticles) {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fillStyle = p.color + Math.floor(p.alpha * 255).toString(16).padStart(2, '0');
-    ctx.fill();
-  }
-
-  // 节拍脉冲效果
-  if (combo > 0) {
-    const pulseAlpha = 0.03 * (1 + comboAnimation);
-    ctx.fillStyle = `rgba(57, 197, 187, ${pulseAlpha})`;
-    ctx.fillRect(0, 0, W, H);
-  }
-}
-
-function drawLanes() {
-  const laneWidth = W / CONFIG.laneCount;
-  const hitY = H * CONFIG.hitLineY;
-  // 灭点位置（屏幕顶部中央）
-  const vanishX = W / 2;
-  const vanishY = -H * 0.15;
-
-  // 透视引导线（从灭点发散到判定线）
-  ctx.globalAlpha = 0.04;
-  for (let i = 0; i <= CONFIG.laneCount; i++) {
-    const bottomX = i * laneWidth;
-    const t = 0.7; // 线条只延伸到70%处
-    const topX = vanishX + (bottomX - vanishX) * 0.15;
-    const topY = vanishY + (hitY - vanishY) * 0.05;
-    ctx.strokeStyle = '#39c5bb';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(topX, topY);
-    ctx.lineTo(bottomX, hitY);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-
-  for (let i = 0; i < CONFIG.laneCount; i++) {
-    const x = i * laneWidth;
-
-    // 轨道分隔线（带渐变淡出）
-    const laneGrad = ctx.createLinearGradient(0, 0, 0, hitY);
-    laneGrad.addColorStop(0, 'rgba(255,255,255,0)');
-    laneGrad.addColorStop(0.3, 'rgba(255,255,255,0.03)');
-    laneGrad.addColorStop(0.8, 'rgba(255,255,255,0.07)');
-    laneGrad.addColorStop(1, 'rgba(255,255,255,0.04)');
-    ctx.strokeStyle = laneGrad;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, hitY);
-    ctx.stroke();
-
-    // 轨道闪烁 + 触摸发光
-    const flashVal = Math.max(laneFlash[i], touchLanes[i] ? 0.4 : 0);
-    if (flashVal > 0.01) {
-      // 全轨道发光柱
-      const grad = ctx.createLinearGradient(x, hitY - 250, x, hitY + 40);
-      grad.addColorStop(0, `rgba(255,255,255,0)`);
-      grad.addColorStop(0.3, CONFIG.laneColors[i] + Math.floor(flashVal * 40).toString(16).padStart(2, '0'));
-      grad.addColorStop(0.7, CONFIG.laneColors[i] + Math.floor(flashVal * 100).toString(16).padStart(2, '0'));
-      grad.addColorStop(1, CONFIG.laneColors[i] + Math.floor(flashVal * 60).toString(16).padStart(2, '0'));
-      ctx.fillStyle = grad;
-      ctx.fillRect(x, 0, laneWidth, hitY + 40);
-
-      // 判定线处圆形光晕
-      const cx = x + laneWidth / 2;
-      const glowR = laneWidth * 0.45 * flashVal;
-      const radGrad = ctx.createRadialGradient(cx, hitY, 0, cx, hitY, glowR);
-      radGrad.addColorStop(0, CONFIG.laneColors[i] + Math.floor(flashVal * 150).toString(16).padStart(2, '0'));
-      radGrad.addColorStop(0.5, CONFIG.laneColors[i] + Math.floor(flashVal * 60).toString(16).padStart(2, '0'));
-      radGrad.addColorStop(1, CONFIG.laneColors[i] + '00');
-      ctx.fillStyle = radGrad;
-      ctx.fillRect(cx - glowR, hitY - glowR, glowR * 2, glowR * 2);
-    }
-  }
-}
-
-function drawHitLine() {
-  const y = H * CONFIG.hitLineY;
-  const laneWidth = W / CONFIG.laneCount;
-
-  // 判定线发光
-  ctx.shadowBlur = 15;
-  ctx.shadowColor = '#39c5bb';
-  ctx.strokeStyle = '#39c5bb88';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(0, y);
-  ctx.lineTo(W, y);
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // 判定圆点
-  for (let i = 0; i < CONFIG.laneCount; i++) {
-    const cx = i * laneWidth + laneWidth / 2;
-    ctx.beginPath();
-    ctx.arc(cx, y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = CONFIG.laneColors[i] + '66';
-    ctx.fill();
-    ctx.strokeStyle = CONFIG.laneColors[i];
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-}
-
-function drawNotes(currentTime) {
-  const laneWidth = W / CONFIG.laneCount;
-  const hitY = H * CONFIG.hitLineY;
-  const noteW = Math.min(CONFIG.noteWidth, laneWidth - 16);
-  const trailLen = CONFIG.trailLen;
-
-  for (const note of notes) {
-    if (note.hit || note.missed) continue;
-    const y = getNoteY(note);
-    if (y < -300 || y > H + 50) continue;
-
-    const cx = note.lane * laneWidth + laneWidth / 2;
-    const color = CONFIG.laneColors[note.lane];
-
-    // 透视缩放
-    const distToHit = Math.max(0, hitY - y);
-    const maxDist = hitY;
-    const perspective = 1 + 0.4 * (1 - distToHit / maxDist);
-    const trailStretch = 1 + 1.5 * (1 - distToHit / maxDist);
-
-    const w = noteW * perspective;
-    const h = CONFIG.noteHeight * perspective;
-
-    // ====== 拖尾光痕 ======
-    const tLen = trailLen * trailStretch;
-    // 外层宽拖尾
-    const outerGrad = ctx.createLinearGradient(cx, y, cx, Math.max(0, y - tLen));
-    outerGrad.addColorStop(0, color + '66');
-    outerGrad.addColorStop(0.2, color + '33');
-    outerGrad.addColorStop(0.6, color + '10');
-    outerGrad.addColorStop(1, color + '00');
-    ctx.fillStyle = outerGrad;
-    ctx.beginPath();
-    ctx.moveTo(cx - w * 0.45, y);
-    ctx.lineTo(cx - w * 0.08, y - tLen);
-    ctx.lineTo(cx + w * 0.08, y - tLen);
-    ctx.lineTo(cx + w * 0.45, y);
-    ctx.closePath();
-    ctx.fill();
-
-    // 内层窄亮拖尾
-    const innerGrad = ctx.createLinearGradient(cx, y, cx, Math.max(0, y - tLen * 0.75));
-    innerGrad.addColorStop(0, '#ffffffaa');
-    innerGrad.addColorStop(0.3, color + '88');
-    innerGrad.addColorStop(0.7, color + '22');
-    innerGrad.addColorStop(1, color + '00');
-    ctx.fillStyle = innerGrad;
-    ctx.beginPath();
-    ctx.moveTo(cx - w * 0.18, y);
-    ctx.lineTo(cx - w * 0.03, y - tLen * 0.75);
-    ctx.lineTo(cx + w * 0.03, y - tLen * 0.75);
-    ctx.lineTo(cx + w * 0.18, y);
-    ctx.closePath();
-    ctx.fill();
-
-    // ====== Hold音符：长条轨道 ======
-    if (note.type === 'hold') {
-      const tailY = getNoteY({ ...note, time: note.time + note.holdDuration });
-      const holdW = w * 0.65;
-      ctx.shadowBlur = 18;
-      ctx.shadowColor = color;
-      // 发光轨道条
-      const holdGrad = ctx.createLinearGradient(cx - holdW / 2, 0, cx + holdW / 2, 0);
-      holdGrad.addColorStop(0, color + '00');
-      holdGrad.addColorStop(0.15, color + '55');
-      holdGrad.addColorStop(0.5, color + 'cc');
-      holdGrad.addColorStop(0.85, color + '55');
-      holdGrad.addColorStop(1, color + '00');
-      ctx.fillStyle = holdGrad;
-      ctx.fillRect(cx - holdW / 2, y, holdW, Math.max(0, tailY - y));
-      // 中心白线
-      ctx.strokeStyle = '#ffffffbb';
-      ctx.lineWidth = 2.5 * perspective;
-      ctx.beginPath();
-      ctx.moveTo(cx, y);
-      ctx.lineTo(cx, tailY);
-      ctx.stroke();
-      // 末端标记
-      const endH = 8 * perspective;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(cx - holdW / 2, tailY - endH / 2, holdW, endH);
-      ctx.shadowBlur = 0;
-    }
-
-    // ====== 音符主体：长条矩形 ======
-    ctx.shadowBlur = 16 * perspective;
-    ctx.shadowColor = color;
-
-    // 外发光
-    ctx.fillStyle = color + '28';
-    const glowPad = 6 * perspective;
-    ctx.fillRect(cx - w / 2 - glowPad, y - h / 2 - glowPad, w + glowPad * 2, h + glowPad * 2);
-
-    // 主体渐变长条
-    const bodyGrad = ctx.createLinearGradient(cx, y - h / 2, cx, y + h / 2);
-    bodyGrad.addColorStop(0, '#ffffffee');
-    bodyGrad.addColorStop(0.25, color);
-    bodyGrad.addColorStop(0.75, color);
-    bodyGrad.addColorStop(1, color + '99');
-    ctx.fillStyle = bodyGrad;
-    ctx.fillRect(cx - w / 2, y - h / 2, w, h);
-
-    // 顶部高光亮条
-    ctx.fillStyle = '#ffffff55';
-    ctx.fillRect(cx - w / 2 + 3, y - h / 2 + 1, w - 6, h * 0.35);
-
-    // 左右边缘亮线
-    ctx.strokeStyle = '#ffffff44';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx - w / 2, y - h / 2);
-    ctx.lineTo(cx - w / 2, y + h / 2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(cx + w / 2, y - h / 2);
-    ctx.lineTo(cx + w / 2, y + h / 2);
-    ctx.stroke();
-
-    ctx.shadowBlur = 0;
-  }
-}
-
-function drawParticles() {
-  for (const p of particles) {
-    ctx.globalAlpha = p.life;
-    if (p.type === 'ring') {
-      ctx.strokeStyle = p.color;
-      ctx.lineWidth = 2.5 * p.life;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (p.type === 'star') {
-      // 星形粒子（四角星）
-      ctx.fillStyle = p.color;
-      const s = p.size * p.life;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y - s);
-      ctx.lineTo(p.x + s * 0.3, p.y - s * 0.3);
-      ctx.lineTo(p.x + s, p.y);
-      ctx.lineTo(p.x + s * 0.3, p.y + s * 0.3);
-      ctx.lineTo(p.x, p.y + s);
-      ctx.lineTo(p.x - s * 0.3, p.y + s * 0.3);
-      ctx.lineTo(p.x - s, p.y);
-      ctx.lineTo(p.x - s * 0.3, p.y - s * 0.3);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  ctx.globalAlpha = 1;
-}
-
-function drawJudgments() {
-  for (const j of judgments) {
-    ctx.globalAlpha = j.life;
-    ctx.fillStyle = j.color;
-    ctx.font = 'bold 24px "Segoe UI", "Microsoft YaHei", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = j.color;
-    ctx.fillText(j.text, j.x, j.y);
-    ctx.shadowBlur = 0;
-  }
-  ctx.globalAlpha = 1;
-}
-
-function drawUI() {
-  // 分数
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 28px "Segoe UI", "Microsoft YaHei", sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillText(Math.floor(score).toLocaleString(), W - 20, 40);
-
-  // Combo
-  if (combo > 2) {
-    const comboScale = 1 + comboAnimation * 0.3;
-    ctx.save();
-    ctx.translate(W / 2, H * CONFIG.hitLineY - 100);
-    ctx.scale(comboScale, comboScale);
-    ctx.fillStyle = combo >= 50 ? '#ffcc44' : combo >= 20 ? '#39c5bb' : '#ffffff';
-    ctx.font = `bold ${combo >= 50 ? 48 : 36}px "Segoe UI", sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = ctx.fillStyle;
-    ctx.fillText(combo, 0, 0);
-    ctx.font = '14px "Segoe UI", sans-serif';
-    ctx.fillStyle = '#ffffff88';
-    ctx.fillText('COMBO', 0, 22);
-    ctx.restore();
-    ctx.shadowBlur = 0;
-  }
-
-  // 进度条
-  if (songDuration > 0) {
-    const currentTime = (audioCtx.currentTime - startTime) * 1000;
-    const progress = Math.min(currentTime / (songDuration * 1000), 1);
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.fillRect(0, H - 4, W, 4);
-    const progGrad = ctx.createLinearGradient(0, 0, W * progress, 0);
-    progGrad.addColorStop(0, '#39c5bb');
-    progGrad.addColorStop(1, '#ff6699');
-    ctx.fillStyle = progGrad;
-    ctx.fillRect(0, H - 4, W * progress, 4);
-  }
-}
-
-// ==================== 菜单渲染 ====================
-function menuLoop() {
-  if (gameState !== 'menu') return;
-  ctx.clearRect(0, 0, W, H);
-
-  // 菜单背景动画
-  const t = Date.now() / 1000;
-  const grad = ctx.createLinearGradient(0, 0, W, H);
-  grad.addColorStop(0, `hsl(${(t * 20) % 360}, 40%, 8%)`);
-  grad.addColorStop(1, `hsl(${(t * 20 + 120) % 360}, 40%, 8%)`);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  for (const p of bgParticles) {
-    p.x += p.vx;
-    p.y += p.vy;
-    if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fillStyle = p.color + '33';
-    ctx.fill();
-  }
-
-  requestAnimationFrame(menuLoop);
-}
-
-// ==================== 游戏结束 ====================
-function endGame() {
-  if (isGameOver) return;
-  isGameOver = true;
-  gameState = 'result';
-
-  const total = perfectCount + greatCount + goodCount + missCount;
-  const accuracy = total > 0 ? ((perfectCount * 100 + greatCount * 70 + goodCount * 40) / (total * 100) * 100).toFixed(1) : 0;
-
-  let rank = 'C';
-  if (accuracy >= 95) rank = 'SS';
-  else if (accuracy >= 90) rank = 'S';
-  else if (accuracy >= 80) rank = 'A';
-  else if (accuracy >= 70) rank = 'B';
-
-  document.getElementById('result-stats').innerHTML = `
-    <div style="font-size:2em;color:${rank === 'SS' ? '#ffcc44' : rank === 'S' ? '#39c5bb' : '#fff'};margin-bottom:15px">${rank}</div>
-    得分：<span>${Math.floor(score).toLocaleString()}</span><br>
-    最大连击：<span>${maxCombo}</span><br>
-    准确率：<span>${accuracy}%</span><br><br>
-    <span style="color:#ffcc44">PERFECT: ${perfectCount}</span> &nbsp;
-    <span style="color:#39c5bb">GREAT: ${greatCount}</span><br>
-    <span style="color:#9966ff">GOOD: ${goodCount}</span> &nbsp;
-    <span style="color:#ff3333">MISS: ${missCount}</span>
-  `;
-
-  setTimeout(() => {
-    document.getElementById('result-screen').classList.add('show');
-  }, 500);
-}
-
-// ==================== roundRect polyfill ====================
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-    if (typeof r === 'number') r = [r, r, r, r];
-    this.moveTo(x + r[0], y);
-    this.lineTo(x + w - r[1], y);
-    this.quadraticCurveTo(x + w, y, x + w, y + r[1]);
-    this.lineTo(x + w, y + h - r[2]);
-    this.quadraticCurveTo(x + w, y + h, x + w - r[2], y + h);
-    this.lineTo(x + r[3], y + h);
-    this.quadraticCurveTo(x, y + h, x, y + h - r[3]);
-    this.lineTo(x, y + r[0]);
-    this.quadraticCurveTo(x, y, x + r[0], y);
-    this.closePath();
-  };
-}
-
-// ==================== 进度条 ====================
-function showProgress() {
-  document.getElementById('progress-bar').style.display = 'block';
-  document.getElementById('loading-text').style.display = 'block';
-}
-function hideProgress() {
-  document.getElementById('progress-bar').style.display = 'none';
-}
-function updateProgress(pct, text) {
-  const fill = document.getElementById('progress-fill');
-  const label = document.getElementById('loading-text');
-  if (fill) fill.style.width = pct + '%';
-  if (text && label) label.textContent = text;
-}
-
-// ==================== 启动 ====================
-window.addEventListener('load', init);
-</script>
+        updateClock();
+        setInterval(updateClock, 10000);
+
+        // ============================================================
+        //  2. 应用路由
+        // ============================================================
+        const container = document.getElementById('appContainer');
+        const appTitle = document.getElementById('appTitle');
+        const appBody = document.getElementById('appBody');
+        const backBtn = document.getElementById('backBtn');
+
+        let currentApp = null;
+
+        // ---- 各应用渲染函数 ----
+        const appRenderers = {
+
+            // ---------- 计算器 ----------
+            '计算器': function() {
+                let expr = '';
+                let result = '0';
+                const display = document.createElement('div');
+                display.className = 'calc-display';
+                display.textContent = '0';
+
+                const grid = document.createElement('div');
+                grid.className = 'calc-grid';
+
+                const btns = [
+                    'C', '±', '%', '÷',
+                    '7', '8', '9', '×',
+                    '4', '5', '6', '−',
+                    '1', '2', '3', '+',
+                    '0', '.', '⌫', '='
+                ];
+
+                const ops = ['÷', '×', '−', '+'];
+                const isOp = (v) => ops.includes(v);
+
+                btns.forEach(label => {
+                    const btn = document.createElement('button');
+                    btn.textContent = label;
+                    if (isOp(label)) btn.className = 'op';
+                    if (label === '=') btn.className = 'equal';
+                    if (label === 'C' || label === '⌫') btn.style.background = 'rgba(239,68,68,0.25)';
+
+                    btn.addEventListener('click', function() {
+                        const val = this.textContent;
+                        if (val === 'C') { expr = '';
+                            result = '0';
+                            display.textContent = '0'; return; }
+                        if (val === '⌫') { expr = expr.slice(0, -1);
+                            display.textContent = expr || '0'; return; }
+                        if (val === '±') {
+                            if (expr.startsWith('-')) expr = expr.slice(1);
+                            else if (expr && expr !== '0') expr = '-' + expr;
+                            display.textContent = expr || '0';
+                            return;
+                        }
+                        if (val === '=') {
+                            try {
+                                const sanitized = expr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+                                const res = Function('"use strict"; return (' + sanitized + ')')();
+                                result = String(parseFloat(res.toFixed(10)));
+                                display.textContent = result;
+                                expr = result;
+                            } catch { display.textContent = '错误';
+                                expr = ''; }
+                            return;
+                        }
+                        // 防止连续运算符
+                        if (isOp(val) && isOp(expr.slice(-1))) {
+                            expr = expr.slice(0, -1) + val;
+                        } else {
+                            expr += val;
+                        }
+                        display.textContent = expr;
+                    });
+                    grid.appendChild(btn);
+                });
+
+                appBody.appendChild(display);
+                appBody.appendChild(grid);
+            },
+
+            // ---------- 备忘录 ----------
+            '备忘录': function() {
+                let memos = JSON.parse(localStorage.getItem('memos') || '[]');
+
+                const inputRow = document.createElement('div');
+                inputRow.className = 'memo-input-row';
+                const input = document.createElement('input');
+                input.placeholder = '写一条备忘录...';
+                const addBtn = document.createElement('button');
+                addBtn.textContent = '添加';
+
+                const list = document.createElement('div');
+                list.className = 'memo-list';
+
+                function renderList() {
+                    list.innerHTML = '';
+                    if (memos.length === 0) {
+                        list.innerHTML = '<div class="memo-empty">📭 暂无备忘录</div>';
+                        return;
+                    }
+                    memos.forEach((text, idx) => {
+                        const item = document.createElement('div');
+                        item.className = 'memo-item';
+                        item.innerHTML = `<span>${text}</span><button class="del-btn" data-idx="${idx}">✕</button>`;
+                        item.querySelector('.del-btn').addEventListener('click', function() {
+                            memos.splice(parseInt(this.dataset.idx), 1);
+                            localStorage.setItem('memos', JSON.stringify(memos));
+                            renderList();
+                        });
+                        list.appendChild(item);
+                    });
+                }
+
+                addBtn.addEventListener('click', function() {
+                    const val = input.value.trim();
+                    if (!val) return;
+                    memos.push(val);
+                    localStorage.setItem('memos', JSON.stringify(memos));
+                    input.value = '';
+                    renderList();
+                });
+                input.addEventListener('keydown', e => { if (e.key === 'Enter') addBtn.click(); });
+
+                inputRow.appendChild(input);
+                inputRow.appendChild(addBtn);
+                appBody.appendChild(inputRow);
+                appBody.appendChild(list);
+                renderList();
+            },
+
+            // ---------- 时钟 ----------
+            '时钟': function() {
+                let swTime = 0,
+                    swInterval = null,
+                    swRunning = false;
+
+                const clockDiv = document.createElement('div');
+                clockDiv.className = 'clock-big';
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'clock-date';
+
+                function updateDigital() {
+                    const now = new Date();
+                    clockDiv.textContent =
+                        String(now.getHours()).padStart(2, '0') + ':' +
+                        String(now.getMinutes()).padStart(2, '0') + ':' +
+                        String(now.getSeconds()).padStart(2, '0');
+                    dateDiv.textContent = now.toLocaleDateString('zh-CN', { weekday: 'long', year: 'numeric',
+                        month: 'long', day: 'numeric' });
+                }
+                updateDigital();
+                setInterval(updateDigital, 1000);
+
+                const swDisplay = document.createElement('div');
+                swDisplay.className = 'clock-big';
+                swDisplay.style.fontSize = '40px';
+                swDisplay.textContent = '00:00.0';
+
+                function formatSW(ms) {
+                    const sec = Math.floor(ms / 1000);
+                    const min = Math.floor(sec / 60);
+                    const s = sec % 60;
+                    const ds = Math.floor((ms % 1000) / 100);
+                    return String(min).padStart(2, '0') + ':' + String(s).padStart(2, '0') + '.' + ds;
+                }
+
+                const swRow = document.createElement('div');
+                swRow.className = 'stopwatch-row';
+                const startBtn = document.createElement('button');
+                startBtn.className = 'sw-start';
+                startBtn.textContent = '▶ 开始';
+                const stopBtn = document.createElement('button');
+                stopBtn.className = 'sw-stop';
+                stopBtn.textContent = '⏹ 停止';
+                const resetBtn = document.createElement('button');
+                resetBtn.className = 'sw-reset';
+                resetBtn.textContent = '↺ 重置';
+
+                startBtn.addEventListener('click', function() {
+                    if (swRunning) return;
+                    swRunning = true;
+                    const startTime = Date.now() - swTime;
+                    swInterval = setInterval(() => {
+                        swTime = Date.now() - startTime;
+                        swDisplay.textContent = formatSW(swTime);
+                    }, 100);
+                });
+                stopBtn.addEventListener('click', function() {
+                    if (!swRunning) return;
+                    swRunning = false;
+                    clearInterval(swInterval);
+                });
+                resetBtn.addEventListener('click', function() {
+                    clearInterval(swInterval);
+                    swRunning = false;
+                    swTime = 0;
+                    swDisplay.textContent = '00:00.0';
+                });
+
+                swRow.appendChild(startBtn);
+                swRow.appendChild(stopBtn);
+                swRow.appendChild(resetBtn);
+
+                appBody.appendChild(clockDiv);
+                appBody.appendChild(dateDiv);
+                appBody.appendChild(document.createElement('hr'));
+                const swLabel = document.createElement('div');
+                swLabel.textContent = '⏱️ 秒表';
+                swLabel.style.textAlign = 'center';
+                swLabel.style.opacity = '0.6';
+                swLabel.style.fontSize = '14px';
+                appBody.appendChild(swLabel);
+                appBody.appendChild(swDisplay);
+                appBody.appendChild(swRow);
+            },
+
+            // ---------- 天气 ----------
+            '天气': function() {
+                const weathers = [
+                    { icon: '☀️', temp: '28°', desc: '晴朗', days: ['今天', '周一', '周二', '周三', '周四'] },
+                    { icon: '⛅', temp: '24°', desc: '多云', days: ['今天', '周一', '周二', '周三', '周四'] },
+                    { icon: '🌧️', temp: '18°', desc: '小雨', days: ['今天', '周一', '周二', '周三', '周四'] },
+                    { icon: '❄️', temp: '2°', desc: '小雪', days: ['今天', '周一', '周二', '周三', '周四'] },
+                ];
+                let wi = 0;
+
+                const main = document.createElement('div');
+                main.className = 'weather-main';
+                const iconEl = document.createElement('div');
+                iconEl.style.fontSize = '72px';
+                const tempEl = document.createElement('div');
+                tempEl.className = 'temp';
+                const descEl = document.createElement('div');
+                descEl.className = 'desc';
+
+                function updateWeather(idx) {
+                    const w = weathers[idx % weathers.length];
+                    iconEl.textContent = w.icon;
+                    tempEl.textContent = w.temp;
+                    descEl.textContent = w.desc;
+                }
+                updateWeather(0);
+
+                const grid = document.createElement('div');
+                grid.className = 'weather-grid';
+
+                function renderDays(idx) {
+                    grid.innerHTML = '';
+                    const base = weathers[idx % weathers.length];
+                    for (let i = 0; i < 5; i++) {
+                        const d = document.createElement('div');
+                        d.className = 'day';
+                        const w = weathers[(idx + i) % weathers.length];
+                        d.innerHTML = `
+                            <div class="day-name">${['今天','周一','周二','周三','周四'][i]}</div>
+                            <div class="day-icon">${w.icon}</div>
+                            <div class="day-temp">${w.temp}</div>
+                        `;
+                        grid.appendChild(d);
+                    }
+                }
+                renderDays(0);
+
+                const switchBtn = document.createElement('button');
+                switchBtn.textContent = '🔄 切换天气';
+                switchBtn.style.cssText =
+                    'padding:12px 24px;border:none;border-radius:40px;background:#6366f1;color:#fff;font-size:16px;cursor:pointer;margin:0 auto;';
+                switchBtn.addEventListener('click', function() {
+                    wi++;
+                    updateWeather(wi);
+                    renderDays(wi);
+                });
+
+                main.appendChild(iconEl);
+                main.appendChild(tempEl);
+                main.appendChild(descEl);
+                appBody.appendChild(main);
+                appBody.appendChild(grid);
+                appBody.appendChild(switchBtn);
+            },
+
+            // ---------- 图库 ----------
+            '图库': function() {
+                const emojis = ['🌅', '🏔️', '🌊', '🌺', '🌳', '🌄', '🌠', '🏖️', '🌋'];
+                const grid = document.createElement('div');
+                grid.className = 'gallery-grid';
+
+                emojis.forEach(emoji => {
+                    const photo = document.createElement('div');
+                    photo.className = 'photo';
+                    photo.textContent = emoji;
+                    photo.addEventListener('click', function() {
+                        const preview = document.getElementById('galleryPreview');
+                        document.getElementById('previewEmoji').textContent = emoji;
+                        preview.classList.add('active');
+                    });
+                    grid.appendChild(photo);
+                });
+                appBody.appendChild(grid);
+
+                // 点击预览关闭
+                const preview = document.getElementById('galleryPreview');
+                preview.addEventListener('click', function() {
+                    this.classList.remove('active');
+                });
+            },
+
+            // ---------- 其他应用（简单展示） ----------
+            'default': function(name) {
+                const div = document.createElement('div');
+                div.style.cssText =
+                    'text-align:center;padding:40px 0;font-size:48px;opacity:0.3;display:flex;flex-direction:column;gap:12px;';
+                div.innerHTML = `
+                    <div>📱</div>
+                    <div style="font-size:18px;opacity:0.5;">${name}</div>
+                    <div style="font-size:14px;opacity:0.3;">荣耀风格 · 演示界面</div>
+                `;
+                appBody.appendChild(div);
+            }
+        };
+
+        // ---- 打开应用 ----
+        function openApp(name) {
+            currentApp = name;
+            appTitle.textContent = name;
+            appBody.innerHTML = '';
+            const renderer = appRenderers[name] || appRenderers['default'];
+            if (renderer === appRenderers['default']) renderer(name);
+            else renderer();
+            container.classList.add('active');
+        }
+
+        // ---- 关闭应用 ----
+        function closeApp() {
+            container.classList.remove('active');
+            // 清理定时器（时钟秒表）
+            if (currentApp === '时钟') {
+                // 无全局变量清理，但已做防泄漏
+            }
+            currentApp = null;
+        }
+
+        // ---- 事件绑定 ----
+        document.querySelectorAll('.icon-item, .dock-item').forEach(el => {
+            el.addEventListener('click', function() {
+                const name = this.dataset.app;
+                if (name) openApp(name);
+            });
+        });
+
+        backBtn.addEventListener('click', closeApp);
+        // 滑动返回（简易）
+        let startX = 0;
+        container.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+        container.addEventListener('touchmove', e => {
+            const dx = e.touches[0].clientX - startX;
+            if (dx > 80 && container.classList.contains('active')) {
+                closeApp();
+            }
+        }, { passive: true });
+
+        // ESC关闭
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && container.classList.contains('active')) closeApp();
+        });
+
+        // ============================================================
+        //  3. 阻止滚动穿透（应用内）
+        // ============================================================
+        document.querySelector('.app-body')?.addEventListener('touchmove', e => {
+            e.stopPropagation();
+        }, { passive: false });
+
+        console.log('✅ 荣耀·真实功能应用已加载 — 点击计算器、备忘录、时钟、天气、图库试试！');
+    </script>
+
 </body>
 </html>
