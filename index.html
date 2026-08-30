@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Windows 11 动态模拟</title>
+    <title>Windows 11 蓝色系</title>
     <style>
-        /* ===== 全局 ===== */
         * {
             margin: 0;
             padding: 0;
@@ -48,53 +47,56 @@
             }
         }
 
-        /* ===== 动态壁纸 ===== */
+        /* ===== 蓝色系动态壁纸 ===== */
         .wallpaper {
             position: absolute;
             inset: 0;
             z-index: 0;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            animation: wallpaperFlow 14s ease-in-out infinite alternate;
+            background: linear-gradient(145deg, #0b1a33 0%, #1a3a6a 30%, #2a5a8a 55%, #1a4a7a 75%, #0b2a4a 100%);
+            animation: blueFlow 16s ease-in-out infinite alternate;
             will-change: background;
         }
-        @keyframes wallpaperFlow {
+        @keyframes blueFlow {
             0% {
-                background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+                background: linear-gradient(145deg, #0b1a33, #1a3a6a, #2a5a8a, #1a4a7a, #0b2a4a);
             }
             25% {
-                background: linear-gradient(135deg, #1a1a3e, #4a3f7a, #2a2a4e);
+                background: linear-gradient(145deg, #0a1a3a, #1a4a7a, #3a7aba, #2a6aaa, #0a2a5a);
             }
             50% {
-                background: linear-gradient(135deg, #1a0f2e, #4a2a6a, #2a1a3e);
+                background: linear-gradient(145deg, #0a1a2a, #2a5a8a, #4a8aba, #3a7aaa, #0a2a4a);
             }
             75% {
-                background: linear-gradient(135deg, #0f1a2e, #2a4a6a, #1a2a4e);
+                background: linear-gradient(145deg, #0a1a3a, #1a4a7a, #3a7aba, #2a6aaa, #0a2a5a);
             }
             100% {
-                background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+                background: linear-gradient(145deg, #0b1a33, #1a3a6a, #2a5a8a, #1a4a7a, #0b2a4a);
             }
         }
+        /* Win11 标志性蓝色光晕 */
         .wallpaper-glow {
             position: absolute;
             inset: 0;
             z-index: 0;
-            background: radial-gradient(ellipse at 30% 40%, rgba(99, 102, 241, 0.15), transparent 60%),
-                radial-gradient(ellipse at 70% 70%, rgba(168, 85, 247, 0.10), transparent 50%);
-            animation: glowPulse 8s ease-in-out infinite alternate;
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(70, 150, 255, 0.20) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 70%, rgba(40, 120, 240, 0.12) 0%, transparent 45%),
+                radial-gradient(ellipse at 50% 50%, rgba(100, 180, 255, 0.06) 0%, transparent 60%);
+            animation: glowBlue 10s ease-in-out infinite alternate;
             will-change: transform, opacity;
         }
-        @keyframes glowPulse {
+        @keyframes glowBlue {
             0% {
-                opacity: 0.5;
+                opacity: 0.6;
                 transform: scale(1);
             }
             50% {
                 opacity: 1;
-                transform: scale(1.05);
+                transform: scale(1.04);
             }
             100% {
-                opacity: 0.6;
-                transform: scale(0.95);
+                opacity: 0.7;
+                transform: scale(0.96);
             }
         }
 
@@ -126,11 +128,11 @@
             -webkit-touch-callout: none;
         }
         .desktop-icon:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
         }
         .desktop-icon:active {
             transform: scale(0.92);
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.10);
         }
         .desktop-icon .icon {
             font-size: 36px;
@@ -149,10 +151,10 @@
         /* ===== 任务栏 ===== */
         .taskbar {
             height: 48px;
-            background: rgba(30, 30, 50, 0.80);
+            background: rgba(20, 30, 50, 0.82);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
             display: flex;
             align-items: center;
             padding: 0 10px;
@@ -177,10 +179,10 @@
             touch-action: manipulation;
         }
         .taskbar .start-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
         }
         .taskbar .start-btn:active {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.12);
             transform: scale(0.92);
         }
         .taskbar .task-items {
@@ -202,7 +204,7 @@
             padding: 0 14px;
             border-radius: 6px;
             background: transparent;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 12px;
             cursor: pointer;
             display: flex;
@@ -215,27 +217,27 @@
             touch-action: manipulation;
         }
         .taskbar .task-item:hover {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
         }
         .taskbar .task-item:active {
             transform: scale(0.95);
         }
         .taskbar .task-item.active {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
             color: #fff;
         }
         .taskbar .task-item .dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #4fc3f7;
+            background: #4a9eff;
             display: none;
             animation: dotPulse 1.2s ease-in-out infinite;
         }
         @keyframes dotPulse {
             0%,
             100% {
-                opacity: 0.4;
+                opacity: 0.3;
                 transform: scale(0.8);
             }
             50% {
@@ -250,10 +252,10 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 13px;
             padding-left: 10px;
-            border-left: 1px solid rgba(255, 255, 255, 0.06);
+            border-left: 1px solid rgba(255, 255, 255, 0.04);
             flex-shrink: 0;
         }
         .taskbar .tray .tray-icon {
@@ -265,7 +267,7 @@
             touch-action: manipulation;
         }
         .taskbar .tray .tray-icon:hover {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
         }
         .taskbar .tray .clock {
             font-size: 12px;
@@ -283,11 +285,11 @@
             left: 6px;
             width: 380px;
             max-height: 460px;
-            background: rgba(30, 30, 50, 0.92);
+            background: rgba(20, 30, 50, 0.92);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
             padding: 16px;
             z-index: 200;
@@ -312,15 +314,15 @@
             width: 4px;
         }
         .start-menu::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
             border-radius: 4px;
         }
         .start-menu .search-box {
             width: 100%;
             padding: 8px 14px;
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.03);
             color: #fff;
             font-size: 14px;
             outline: none;
@@ -328,11 +330,11 @@
             transition: border-color 0.2s, background 0.2s;
         }
         .start-menu .search-box:focus {
-            border-color: rgba(99, 102, 241, 0.3);
-            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(74, 158, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
         }
         .start-menu .search-box::placeholder {
-            color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.20);
         }
         .start-menu .app-grid {
             display: grid;
@@ -351,18 +353,18 @@
             touch-action: manipulation;
         }
         .start-menu .app-grid .app:hover {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
         }
         .start-menu .app-grid .app:active {
             transform: scale(0.92);
-            background: rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.08);
         }
         .start-menu .app-grid .app .app-icon {
             font-size: 28px;
         }
         .start-menu .app-grid .app .app-name {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.65);
+            color: rgba(255, 255, 255, 0.55);
             text-align: center;
             line-height: 1.2;
         }
@@ -370,11 +372,11 @@
         /* ===== 窗口 ===== */
         .window {
             position: absolute;
-            background: rgba(28, 28, 48, 0.92);
+            background: rgba(20, 30, 50, 0.92);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
             display: none;
             flex-direction: column;
@@ -390,7 +392,7 @@
         }
         .window.focus {
             box-shadow: 0 15px 60px rgba(0, 0, 0, 0.7);
-            border-color: rgba(255, 255, 255, 0.10);
+            border-color: rgba(74, 158, 255, 0.15);
         }
         .window.maximized {
             border-radius: 0;
@@ -418,7 +420,7 @@
         .window .title-bar .title-text {
             flex: 1;
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.75);
+            color: rgba(255, 255, 255, 0.65);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -438,7 +440,7 @@
             border: none;
             border-radius: 6px;
             background: transparent;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.3);
             font-size: 14px;
             cursor: pointer;
             display: flex;
@@ -448,7 +450,7 @@
             touch-action: manipulation;
         }
         .window .title-bar .win-controls button:hover {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
             color: #fff;
         }
         .window .title-bar .win-controls button:active {
@@ -459,16 +461,17 @@
             color: #fff;
         }
         .window .title-bar .win-controls .maximize:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
+            color: #4a9eff;
         }
         .window .title-bar .win-controls .minimize:hover {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
         }
         .window .window-body {
             flex: 1;
             padding: 14px 16px;
             overflow: auto;
-            color: rgba(255, 255, 255, 0.75);
+            color: rgba(255, 255, 255, 0.65);
             font-size: 13px;
             line-height: 1.6;
         }
@@ -476,7 +479,7 @@
             width: 6px;
         }
         .window .window-body::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
             border-radius: 4px;
         }
 
@@ -495,7 +498,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.4);
             transition: background 0.15s;
             display: flex;
             align-items: center;
@@ -503,14 +506,14 @@
             touch-action: manipulation;
         }
         .explorer-sidebar .folder-item:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.03);
         }
         .explorer-sidebar .folder-item:active {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
         }
         .explorer-sidebar .folder-item.active {
-            background: rgba(255, 255, 255, 0.06);
-            color: #fff;
+            background: rgba(74, 158, 255, 0.10);
+            color: #4a9eff;
         }
         .explorer-content {
             flex: 1;
@@ -531,18 +534,18 @@
             touch-action: manipulation;
         }
         .explorer-content .file-item:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.03);
         }
         .explorer-content .file-item:active {
             transform: scale(0.92);
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.06);
         }
         .explorer-content .file-item .file-icon {
             font-size: 30px;
         }
         .explorer-content .file-item .file-name {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.4);
             text-align: center;
             line-height: 1.2;
             max-width: 64px;
@@ -560,18 +563,18 @@
             justify-content: space-between;
             padding: 5px 10px;
             border-radius: 6px;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.015);
             font-size: 12px;
             transition: background 0.15s;
         }
         .taskmgr-body .task-row:hover {
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.025);
         }
         .taskmgr-body .task-row .task-name {
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
         }
         .taskmgr-body .task-row .task-cpu {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.25);
             font-size: 11px;
             display: flex;
             align-items: center;
@@ -581,13 +584,13 @@
             display: inline-block;
             width: 60px;
             height: 4px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
             border-radius: 4px;
             overflow: hidden;
         }
         .taskmgr-body .task-row .task-cpu .bar .fill {
             height: 100%;
-            background: linear-gradient(90deg, #4f46e5, #818cf8);
+            background: linear-gradient(90deg, #4a9eff, #7ab8ff);
             border-radius: 4px;
             transition: width 0.8s ease;
         }
@@ -595,11 +598,11 @@
         /* ===== 右键菜单 ===== */
         .context-menu {
             position: absolute;
-            background: rgba(30, 30, 50, 0.92);
+            background: rgba(20, 30, 50, 0.92);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
             padding: 4px;
             z-index: 300;
@@ -612,7 +615,7 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.5);
             transition: background 0.1s;
             display: flex;
             align-items: center;
@@ -620,15 +623,15 @@
             touch-action: manipulation;
         }
         .context-menu .ctx-item:hover {
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
             color: #fff;
         }
         .context-menu .ctx-item:active {
-            background: rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.08);
         }
         .context-menu .ctx-divider {
             height: 1px;
-            background: rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.03);
             margin: 4px 8px;
         }
 
@@ -689,7 +692,7 @@
 
     <div class="win11" id="win11">
 
-        <!-- ===== 动态壁纸 ===== -->
+        <!-- ===== 蓝色系动态壁纸 ===== -->
         <div class="wallpaper"></div>
         <div class="wallpaper-glow"></div>
 
@@ -748,7 +751,7 @@
 
     <script>
         // ================================================================
-        //  1. 动态时钟（秒级跳动）
+        //  1. 动态时钟
         // ================================================================
         function updateClock() {
             const now = new Date();
@@ -820,8 +823,8 @@
                 case 'recycle': {
                     const div = document.createElement('div');
                     div.style.cssText =
-                        'text-align:center;padding:30px 0;color:rgba(255,255,255,0.3);font-size:14px;';
-                    div.innerHTML = '🗑️ 回收站为空<br><span style="font-size:12px;opacity:0.4;">所有已删除的文件将出现在这里</span>';
+                        'text-align:center;padding:30px 0;color:rgba(255,255,255,0.2);font-size:14px;';
+                    div.innerHTML = '🗑️ 回收站为空<br><span style="font-size:12px;opacity:0.3;">所有已删除的文件将出现在这里</span>';
                     bodyEl.appendChild(div);
                     break;
                 }
@@ -862,7 +865,7 @@
                 case 'notepad': {
                     const ta = document.createElement('textarea');
                     ta.style.cssText =
-                        'width:100%;height:100%;min-height:160px;background:transparent;border:none;color:rgba(255,255,255,0.75);font-size:14px;font-family:monospace;resize:none;outline:none;padding:4px;';
+                        'width:100%;height:100%;min-height:160px;background:transparent;border:none;color:rgba(255,255,255,0.65);font-size:14px;font-family:monospace;resize:none;outline:none;padding:4px;';
                     ta.placeholder = '在此输入文字...';
                     ta.value = '这是记事本\n\n你可以在这里输入文字。\n\n窗口可以拖动、最大化、最小化、关闭。';
                     bodyEl.appendChild(ta);
@@ -881,13 +884,13 @@
                     ].forEach(item => {
                         const row = document.createElement('div');
                         row.style.cssText =
-                            'display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer;transition:background 0.15s;touch-action:manipulation;';
+                            'display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.015);cursor:pointer;transition:background 0.15s;touch-action:manipulation;';
                         row.innerHTML =
                             `<span style="font-size:18px;">${item.icon}</span><span>${item.label}</span>`;
                         row.addEventListener('mouseenter', () => { row.style.background =
-                            'rgba(255,255,255,0.04)'; });
+                            'rgba(255,255,255,0.03)'; });
                         row.addEventListener('mouseleave', () => { row.style.background =
-                            'rgba(255,255,255,0.02)'; });
+                            'rgba(255,255,255,0.015)'; });
                         div.appendChild(row);
                     });
                     bodyEl.appendChild(div);
@@ -896,7 +899,7 @@
                 case 'terminal': {
                     const div = document.createElement('div');
                     div.style.cssText =
-                        'font-family:monospace;font-size:13px;background:rgba(0,0,0,0.2);border-radius:8px;padding:12px;min-height:120px;white-space:pre-wrap;color:rgba(255,255,255,0.7);';
+                        'font-family:monospace;font-size:13px;background:rgba(0,0,0,0.15);border-radius:8px;padding:12px;min-height:120px;white-space:pre-wrap;color:rgba(255,255,255,0.55);';
                     div.textContent =
                         'Microsoft Windows [版本 11.0.22621]\n(c) Microsoft Corporation。保留所有权利。\n\nC:\\Users\\User> echo Hello Windows 11!\nHello Windows 11!\n\nC:\\Users\\User> _';
                     bodyEl.appendChild(div);
@@ -1151,7 +1154,7 @@
         });
 
         // ================================================================
-        //  5. 右键菜单（电脑端）
+        //  5. 右键菜单
         // ================================================================
         const contextMenu = document.getElementById('contextMenu');
         const desktop = document.getElementById('desktop');
@@ -1172,10 +1175,28 @@
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const action = el.dataset.action;
-                if (action === 'refresh') alert('🔄 桌面已刷新');
-                else if (action === 'newfolder') alert('📁 新建文件夹');
-                else if (action === 'newtxt') alert('📄 新建文本文档.txt');
-                else if (action === 'taskmgr') openApp('任务管理器');
+                if (action === 'refresh') {
+                    const msg = document.createElement('div');
+                    msg.style.cssText =
+                        'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(20,30,50,0.9);backdrop-filter:blur(20px);padding:20px 40px;border-radius:12px;color:#fff;z-index:999;font-size:16px;animation:menuOpen 0.3s ease-out;border:1px solid rgba(255,255,255,0.04);';
+                    msg.textContent = '🔄 桌面已刷新';
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 1200);
+                } else if (action === 'newfolder') {
+                    const msg = document.createElement('div');
+                    msg.style.cssText =
+                        'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(20,30,50,0.9);backdrop-filter:blur(20px);padding:20px 40px;border-radius:12px;color:#fff;z-index:999;font-size:16px;animation:menuOpen 0.3s ease-out;border:1px solid rgba(255,255,255,0.04);';
+                    msg.textContent = '📁 新建文件夹';
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 1200);
+                } else if (action === 'newtxt') {
+                    const msg = document.createElement('div');
+                    msg.style.cssText =
+                        'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(20,30,50,0.9);backdrop-filter:blur(20px);padding:20px 40px;border-radius:12px;color:#fff;z-index:999;font-size:16px;animation:menuOpen 0.3s ease-out;border:1px solid rgba(255,255,255,0.04);';
+                    msg.textContent = '📄 新建文本文档.txt';
+                    document.body.appendChild(msg);
+                    setTimeout(() => msg.remove(), 1200);
+                } else if (action === 'taskmgr') openApp('任务管理器');
                 contextMenu.style.display = 'none';
             });
         });
@@ -1211,8 +1232,8 @@
             }
         });
 
-        console.log('✅ Windows 11 动态模拟已启动！');
-        console.log('📌 支持: 动态壁纸 | 窗口拖拽 | 最大化/最小化/关闭 | 开始菜单 | 右键菜单 | 长按触控');
+        console.log('✅ Windows 11 蓝色系动态模拟已启动！');
+        console.log('📌 配色取自真实 Win11 蓝色主题');
     </script>
 
 </body>
