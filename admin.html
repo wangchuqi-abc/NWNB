@@ -744,7 +744,7 @@
     </div>
 
     <!-- ==================== 版本信息 ==================== -->
-    <div id="version-info">版本 5.2 (2026-08-30) — RATE 42px，总分 64px 并再左移20px</div>
+    <div id="version-info">版本 5.4 (2026-09-01) — 视频硬切，UI单独淡入淡出，无缝衔接</div>
 
     <script>
         // ============================================================
@@ -1013,7 +1013,7 @@
                 await document.fonts.load('bold 130px BiaoXiaoZhi');
                 await document.fonts.load('bold 64px BiaoXiaoZhi');
                 await document.fonts.load('bold 42px BiaoXiaoZhi');
-                await document.fonts.load('bold 64px BiaoXiaoZhi');
+                await document.fonts.load('bold 84px BiaoXiaoZhi');
                 await document.fonts.ready;
                 console.log('✅ 字体已加载完成');
             } catch (e) {
@@ -1184,21 +1184,25 @@
             
             safeDrawImage(ctx, bg, x, y, imgW, imgH);
             
-            // RATE：字体 42px
+            // === 修改点：调整 RATE 文字位置 ===
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 42px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+            ctx.font = 'bold 30px BiaoXiaoZhi, Microsoft YaHei, sans-serif'; // 调小一点
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             var rateText = d.rate || '';
-            ctx.fillText('Rate: ' + rateText, x + 50, y + imgH / 2 + 5);
             
-            // 总分：字体 64px，右边距 60px（再往左移20px）
+            // 将 RATE 放在左侧边缘
+            ctx.fillText('Rate: ' + rateText, x + imgW * 0.05, y + imgH / 2);
+            
+            // === 修改点：调整总分数字位置 ===
             var score = d.totalScore || '0';
             var paddedScore = String(score).padStart(8, '0');
-            ctx.font = 'bold 64px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+            ctx.font = 'bold 60px BiaoXiaoZhi, Microsoft YaHei, sans-serif'; // 调小一点
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
-            ctx.fillText(paddedScore, x + imgW - 60, y + imgH / 2);
+            
+            // 将总分数字放在背景图右侧，留出一定边距
+            ctx.fillText(paddedScore, x + imgW - 20, y + imgH / 2);
         }
 
         function drawPreview(rankIndex) {
@@ -1314,20 +1318,10 @@
             if (placeholder) placeholder.style.display = 'none';
         }
 
-        function drawFrame(ctx, video, d, uiAlpha, W, H) {
-            ctx.globalAlpha = 1;
-
-            const videoW = video.videoWidth || 1920;
-            const videoH = video.videoHeight || 1080;
-            const scale = Math.min(W / videoW, H / videoH);
-            const scaledW = videoW * scale;
-            const scaledH = videoH * scale;
-            const offsetX = (W - scaledW) / 2;
-            const offsetY = (H - scaledH) / 2;
-
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, W, H);
-
+        // ===== 核心修改：视频淡入淡出，UI 左右滑动 =====
+        function drawFrame(ctx, video, d, uiAlpha, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, uiOffset) {
+            // 视频：跟随 videoAlpha 淡入淡出
+            ctx.globalAlpha = videoAlpha;
             try {
                 ctx.drawImage(video, offsetX, offsetY, scaledW, scaledH);
             } catch (e) {
@@ -1335,7 +1329,12 @@
                 ctx.fillRect(0, 0, W, H);
             }
 
+            // UI：跟随 uiAlpha 淡入淡出 + 左右滑动
             ctx.globalAlpha = uiAlpha;
+
+            // === 左侧 UI（向左移动）===
+            ctx.save();
+            ctx.translate(-uiOffset, 0); // 左移
 
             drawScoreBg(ctx, W, H, d);
 
@@ -1381,6 +1380,12 @@
             const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
             ctx.fillText(artistLine || '', 300, H - 150);
 
+            ctx.restore();
+
+            // === 右侧 UI（向右移动）===
+            ctx.save();
+            ctx.translate(uiOffset, 0); // 右移
+
             if (assets.historyBottom) {
                 safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
             } else {
@@ -1410,6 +1415,8 @@
                     ctx.fillText(label, W - 430 + i * 140, H - 38);
                 });
             }
+
+            ctx.restore();
 
             ctx.globalAlpha = 1;
             ctx.textBaseline = 'alphabetic';
@@ -1451,7 +1458,7 @@
             }
         }
 
-        // ==================== 视频生成核心 ====================
+        // ==================== 视频生成核心（视频淡入淡出 + UI 左右滑动） ====================
         async function startVideoGeneration() {
             const missing = rankData.filter(d => !d.videoFile);
             if (missing.length > 0) {
@@ -1487,66 +1494,32 @@
             const canvas = document.getElementById('preview-canvas');
             const ctx = canvas.getContext('2d');
             const W = 1920, H = 1080;
-            const FADE_DURATION = 0.5;
+            
+            // 修改：视频淡入淡出时长 0.5s，UI 滑动时长 1s
+            const VIDEO_FADE_DURATION = 0.5;
+            const UI_SLIDE_DURATION = 1.0;
 
             try {
                 await document.fonts.load('bold 130px BiaoXiaoZhi');
                 await document.fonts.load('bold 64px BiaoXiaoZhi');
                 await document.fonts.load('bold 42px BiaoXiaoZhi');
-                await document.fonts.load('bold 64px BiaoXiaoZhi');
+                await document.fonts.load('bold 84px BiaoXiaoZhi');
                 await document.fonts.ready;
-                console.log('✅ 字体已就绪，开始录制');
+                console.log('✅ 字体已就绪');
             } catch (e) {
-                console.warn('⚠️ 字体加载失败，使用系统字体');
+                console.warn('⚠️ 字体加载失败:', e);
             }
 
             const audioDest = initAudioMixer();
 
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = '#56ab2f';
-            ctx.font = 'bold 60px Microsoft YaHei';
-            ctx.textAlign = 'center';
-            ctx.fillText('🎬 准备录制...', W/2, H/2);
-
-            console.log('🔥 预加载视频中...');
-            const preloadCount = Math.min(5, TOTAL_RANKS);
-            const preloadVideos = [];
-            for (let i = 0; i < preloadCount; i++) {
-                const idx = TOTAL_RANKS - 1 - i;
-                const d = rankData[idx];
-                if (d && d.videoFile) {
-                    try {
-                        const v = document.createElement('video');
-                        v.src = URL.createObjectURL(d.videoFile);
-                        v.preload = 'auto';
-                        v.muted = true;
-                        v.load();
-                        preloadVideos.push({ video: v, url: v.src, rank: d.rank });
-                        console.log(`📥 预加载第 ${d.rank} 名完成`);
-                    } catch (e) {
-                        console.warn(`⚠️ 预加载第 ${d.rank} 名失败:`, e);
-                    }
-                }
-            }
-            await new Promise(r => setTimeout(r, 500));
-            preloadVideos.forEach(({ video, url }) => {
-                try {
-                    video.remove();
-                    URL.revokeObjectURL(url);
-                } catch (e) {}
-            });
-            console.log('✅ 预加载完成');
 
             const canvasStream = canvas.captureStream(30);
             const audioTracks = audioDest.stream.getAudioTracks();
             const combinedStream = new MediaStream();
             canvasStream.getVideoTracks().forEach(t => combinedStream.addTrack(t));
             audioTracks.forEach(t => combinedStream.addTrack(t));
-            
-            console.log(`📹 视频轨道: ${canvasStream.getVideoTracks().length}, 音频轨道: ${audioTracks.length}`);
 
             let mimeType = 'video/webm;codecs=vp9';
             if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -1568,24 +1541,15 @@
             recorder.ondataavailable = e => {
                 if (e.data && e.data.size > 0) {
                     chunks.push(e.data);
-                    console.log(`📦 数据块: ${(e.data.size/1024).toFixed(1)} KB`);
                 }
             };
 
             const recordingComplete = new Promise((resolve, reject) => {
                 recorder.onstop = () => {
-                    console.log(`🛑 录制停止，数据块: ${chunks.length}`);
-                    if (recorderError) {
-                        reject(recorderError);
-                        return;
-                    }
-                    if (chunks.length === 0) {
-                        reject(new Error('❌ 没有录制到任何数据！'));
-                        return;
-                    }
+                    if (recorderError) { reject(recorderError); return; }
+                    if (chunks.length === 0) { reject(new Error('❌ 没有录制到任何数据！')); return; }
                     try {
                         const blob = new Blob(chunks, { type: 'video/webm' });
-                        console.log(`📊 文件大小: ${(blob.size/1024/1024).toFixed(2)} MB`);
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
@@ -1595,111 +1559,137 @@
                         document.body.removeChild(a);
                         setTimeout(() => URL.revokeObjectURL(url), 5000);
                         resolve();
-                    } catch (e) {
-                        reject(e);
-                    }
+                    } catch (e) { reject(e); }
                 };
-
-                recorder.onerror = (e) => {
-                    console.error('❌ 录制错误:', e);
-                    recorderError = e;
-                };
+                recorder.onerror = (e) => { recorderError = e; };
             });
 
             console.log('🎬 开始录制...');
             recorder.start(1000);
 
+            // ===== 预加载全部视频 =====
+            const videos = [];
             for (let i = TOTAL_RANKS - 1; i >= 0; i--) {
                 const d = rankData[i];
-                if (!d.videoFile) {
-                    console.warn(`⚠️ 第 ${d.rank} 名无视频，跳过`);
-                    continue;
-                }
-
-                const processedCount = TOTAL_RANKS - i;
-                console.log(`🎯 第 ${d.rank} 名 (${processedCount}/${TOTAL_RANKS})`);
-
-                try {
-                    const videoUrl = URL.createObjectURL(d.videoFile);
-                    const video = document.createElement('video');
-                    video.src = videoUrl;
-                    video.playsInline = true;
-                    video.crossOrigin = 'anonymous';
-                    
-                    await new Promise((resolve, reject) => {
-                        video.onloadedmetadata = resolve;
-                        video.onerror = reject;
-                        setTimeout(() => reject(new Error('视频加载超时')), 10000);
-                    });
-
-                    console.log(`📹 第 ${d.rank} 名 原始尺寸: ${video.videoWidth}x${video.videoHeight}`);
-
-                    connectVideoAudio(video);
-
-                    const startTime = d.startTime || 0;
-                    const endTime = d.endTime > 0 ? d.endTime : video.duration;
-                    const duration = Math.max(endTime - startTime, 0.5);
-
-                    console.log(`⏱️ 片段: ${startTime.toFixed(2)}s - ${endTime.toFixed(2)}s (时长: ${duration.toFixed(2)}s)`);
-
-                    if (startTime > 0) {
-                        video.currentTime = startTime;
-                        await new Promise(r => { video.onseeked = r; });
-                    }
-
-                    const fadeInStart = performance.now();
-                    while (performance.now() - fadeInStart < FADE_DURATION * 1000) {
-                        const p = (performance.now() - fadeInStart) / (FADE_DURATION * 1000);
-                        drawFrame(ctx, video, d, Math.min(p, 1), W, H);
-                        await sleepFrame();
-                    }
-
-                    await video.play();
-                    if (audioContext && audioContext.state === 'suspended') {
-                        await audioContext.resume();
-                    }
-
-                    const playStart = performance.now();
-                    const playDuration = Math.max((duration - FADE_DURATION * 2) * 1000, 100);
-                    
-                    let frameCount = 0;
-                    while (performance.now() - playStart < playDuration) {
-                        if (video.currentTime >= endTime) {
-                            video.pause();
-                            break;
-                        }
-                        if (!video.paused && !video.ended) {
-                            drawFrame(ctx, video, d, 1, W, H);
-                            frameCount++;
-                        }
-                        const elapsed = performance.now() - fadeInStart;
-                        const progress = Math.min(elapsed / (duration * 1000), 1);
-                        const overall = ((processedCount - 1 + progress) / TOTAL_RANKS * 100).toFixed(0);
-                        updateProgress(progressWrap, `第 ${d.rank} 名 (${processedCount}/${TOTAL_RANKS})...`, overall);
-                        await sleepFrame();
-                    }
-                    video.pause();
-                    console.log(`🎞️ 第 ${d.rank} 名渲染 ${frameCount} 帧`);
-
-                    const fadeOutStart = performance.now();
-                    while (performance.now() - fadeOutStart < FADE_DURATION * 1000) {
-                        const p = (performance.now() - fadeOutStart) / (FADE_DURATION * 1000);
-                        drawFrame(ctx, video, d, 1 - Math.min(p, 1), W, H);
-                        await sleepFrame();
-                    }
-
-                    URL.revokeObjectURL(videoUrl);
-                    video.remove();
-
-                } catch (err) {
-                    console.error(`❌ 处理第 ${d.rank} 名时出错:`, err);
-                    continue;
-                }
+                if (!d.videoFile) continue;
+                const v = document.createElement('video');
+                v.src = URL.createObjectURL(d.videoFile);
+                v.playsInline = true;
+                v.crossOrigin = 'anonymous';
+                await new Promise(r => { v.onloadedmetadata = r; });
+                videos.push({ video: v, data: d, index: i });
             }
 
-            updateProgress(progressWrap, '导出中...', '100');
+            // ===== 逐个播放，视频淡入淡出 + UI 左右滑动 =====
+            for (let vIdx = 0; vIdx < videos.length; vIdx++) {
+                const { video, data: d, index: i } = videos[vIdx];
+                const processedCount = videos.length - vIdx;
+                
+                const startTime = d.startTime || 0;
+                const endTime = d.endTime > 0 ? d.endTime : video.duration;
+                const duration = Math.max(endTime - startTime, 0.5);
+
+                console.log(`🎯 第 ${d.rank} 名 (${processedCount}/${TOTAL_RANKS})`);
+
+                connectVideoAudio(video);
+
+                if (startTime > 0) {
+                    video.currentTime = startTime;
+                    await new Promise(r => { video.onseeked = r; });
+                }
+
+                await video.play();
+                if (audioContext && audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+
+                const playStart = performance.now();
+                const totalDuration = duration * 1000;
+                const fadeMs = VIDEO_FADE_DURATION * 1000;
+                const slideMs = UI_SLIDE_DURATION * 1000;
+
+                // 计算视频画面缩放参数
+                const videoW = video.videoWidth || 1920;
+                const videoH = video.videoHeight || 1080;
+                const scale = Math.min(W / videoW, H / videoH);
+                const scaledW = videoW * scale;
+                const scaledH = videoH * scale;
+                const offsetX = (W - scaledW) / 2;
+                const offsetY = (H - scaledH) / 2;
+
+                // 音频淡入淡出
+                let gainNode = null;
+                if (currentAudioNode && audioContext) {
+                    gainNode = audioContext.createGain();
+                    currentAudioNode.connect(gainNode);
+                    gainNode.connect(audioDestination);
+                }
+
+                while (performance.now() - playStart < totalDuration) {
+                    const elapsed = performance.now() - playStart;
+                    const progress = elapsed / totalDuration;
+
+                    // 视频淡入淡出
+                    let videoAlpha = 1;
+                    if (elapsed < fadeMs) {
+                        videoAlpha = elapsed / fadeMs;
+                    } else if (elapsed > totalDuration - fadeMs) {
+                        videoAlpha = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
+                    }
+
+                    // UI 滑动（左移 + 右移）
+                    let uiOffset = 0;
+                    
+                    // 第1个视频：从右侧滑入（左UI）
+                    if (vIdx === 0 && elapsed < slideMs) {
+                        uiOffset = W * (1 - elapsed / slideMs); // 从右向左滑入
+                    }
+                    // 最后一个视频：滑出
+                    else if (vIdx === videos.length - 1 && elapsed > totalDuration - slideMs) {
+                        uiOffset = -W * ((elapsed - (totalDuration - slideMs)) / slideMs); // 向左滑出
+                    }
+                    // 中间视频：滑出 + 滑入
+                    else {
+                        if (elapsed < slideMs) {
+                            uiOffset = -W * (1 - elapsed / slideMs); // 从左侧滑入
+                        } else if (elapsed > totalDuration - slideMs) {
+                            uiOffset = W * ((elapsed - (totalDuration - slideMs)) / slideMs); // 向右侧滑出
+                        }
+                    }
+
+                    // 音频淡入淡出（0.5s）
+                    if (gainNode) {
+                        if (elapsed < fadeMs) {
+                            gainNode.gain.value = elapsed / fadeMs;
+                        } else if (elapsed > totalDuration - fadeMs) {
+                            gainNode.gain.value = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
+                        } else {
+                            gainNode.gain.value = 1;
+                        }
+                    }
+
+                    // 绘制画面（视频淡入淡出 + UI 滑动）
+                    drawFrame(ctx, video, d, 1, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, uiOffset);
+
+                    // 更新进度
+                    const overall = (vIdx + progress) / TOTAL_RANKS * 100;
+                    document.getElementById('progress-text').textContent = `第 ${d.rank} 名 (${processedCount}/${TOTAL_RANKS})...`;
+                    document.getElementById('progress-percent').textContent = overall.toFixed(0) + '%';
+                    document.getElementById('progress-fill').style.width = overall.toFixed(0) + '%';
+
+                    await sleepFrame();
+                }
+
+                video.pause();
+            }
+
+            // 清理视频资源
+            videos.forEach(({ video, data }) => {
+                URL.revokeObjectURL(video.src);
+                video.remove();
+            });
+
             console.log('📝 所有片段处理完成，停止录制...');
-            
             recorder.stop();
             await recordingComplete;
             console.log('✅ 视频生成完成！');
@@ -1715,7 +1705,7 @@
             return new Promise(r => requestAnimationFrame(r));
         }
 
-        // ==================== 单个视频生成 ====================
+        // ==================== 单个视频生成（同步修改） ====================
         function updateSingleRankPreview() {
             const startRank = parseInt(document.getElementById('single-start-rank').value) || 1;
             const endRank = parseInt(document.getElementById('single-end-rank').value) || 5;
@@ -2024,13 +2014,16 @@
             const canvas = document.getElementById('single-preview-canvas');
             const ctx = canvas.getContext('2d');
             const W = 1920, H = 1080;
-            const FADE_DURATION = 0.5;
+            
+            // 修改：视频淡入淡出时长 0.5s，UI 滑动时长 1s
+            const VIDEO_FADE_DURATION = 0.5;
+            const UI_SLIDE_DURATION = 1.0;
 
             try {
                 await document.fonts.load('bold 130px BiaoXiaoZhi');
                 await document.fonts.load('bold 64px BiaoXiaoZhi');
                 await document.fonts.load('bold 42px BiaoXiaoZhi');
-                await document.fonts.load('bold 64px BiaoXiaoZhi');
+                await document.fonts.load('bold 84px BiaoXiaoZhi');
                 await document.fonts.ready;
                 console.log('✅ 字体已就绪，开始单个录制');
             } catch (e) {
@@ -2041,12 +2034,6 @@
 
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, W, H);
-            ctx.fillStyle = '#56ab2f';
-            ctx.font = 'bold 60px Microsoft YaHei';
-            ctx.textAlign = 'center';
-            ctx.fillText('🎬 准备录制...', W/2, H/2);
 
             const canvasStream = canvas.captureStream(30);
             const audioTracks = audioDest.stream.getAudioTracks();
@@ -2075,24 +2062,15 @@
             recorder.ondataavailable = e => {
                 if (e.data && e.data.size > 0) {
                     chunks.push(e.data);
-                    console.log(`📦 数据块: ${(e.data.size/1024).toFixed(1)} KB`);
                 }
             };
 
             const recordingComplete = new Promise((resolve, reject) => {
                 recorder.onstop = () => {
-                    console.log(`🛑 录制停止，数据块: ${chunks.length}`);
-                    if (recorderError) {
-                        reject(recorderError);
-                        return;
-                    }
-                    if (chunks.length === 0) {
-                        reject(new Error('❌ 没有录制到任何数据！'));
-                        return;
-                    }
+                    if (recorderError) { reject(recorderError); return; }
+                    if (chunks.length === 0) { reject(new Error('❌ 没有录制到任何数据！')); return; }
                     try {
                         const blob = new Blob(chunks, { type: 'video/webm' });
-                        console.log(`📊 文件大小: ${(blob.size/1024/1024).toFixed(2)} MB`);
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
@@ -2102,115 +2080,134 @@
                         document.body.removeChild(a);
                         setTimeout(() => URL.revokeObjectURL(url), 5000);
                         resolve();
-                    } catch (e) {
-                        reject(e);
-                    }
+                    } catch (e) { reject(e); }
                 };
-
-                recorder.onerror = (e) => {
-                    console.error('❌ 录制错误:', e);
-                    recorderError = e;
-                };
+                recorder.onerror = (e) => { recorderError = e; };
             });
 
             console.log('🎬 开始录制...');
             recorder.start(1000);
 
             const totalRanks = endRank - startRank + 1;
-
+            const videos = [];
             for (let i = 0; i < totalRanks; i++) {
                 const rankIndex = endRank - 1 - i;
                 const d = rankData[rankIndex];
-                const processedCount = i + 1;
+                if (!d.videoFile) continue;
+                const v = document.createElement('video');
+                v.src = URL.createObjectURL(d.videoFile);
+                v.playsInline = true;
+                v.crossOrigin = 'anonymous';
+                await new Promise(r => { v.onloadedmetadata = r; });
+                videos.push({ video: v, data: d, rankIndex: rankIndex });
+            }
 
-                if (!d.videoFile) {
-                    console.warn(`⚠️ 第 ${d.rank} 名无视频，跳过`);
-                    continue;
-                }
+            for (let vIdx = 0; vIdx < videos.length; vIdx++) {
+                const { video, data: d, rankIndex } = videos[vIdx];
+                const processedCount = vIdx + 1;
+
+                const startTime = d.startTime || 0;
+                const endTime = d.endTime > 0 ? d.endTime : video.duration;
+                const duration = Math.max(endTime - startTime, 0.5);
 
                 console.log(`🎯 第 ${d.rank} 名 (${processedCount}/${totalRanks})`);
 
-                try {
-                    const videoUrl = URL.createObjectURL(d.videoFile);
-                    const video = document.createElement('video');
-                    video.src = videoUrl;
-                    video.playsInline = true;
-                    video.crossOrigin = 'anonymous';
-                    
-                    await new Promise((resolve, reject) => {
-                        video.onloadedmetadata = resolve;
-                        video.onerror = reject;
-                        setTimeout(() => reject(new Error('视频加载超时')), 10000);
-                    });
+                connectVideoAudio(video);
 
-                    console.log(`📹 第 ${d.rank} 名 原始尺寸: ${video.videoWidth}x${video.videoHeight}`);
-
-                    connectVideoAudio(video);
-
-                    const startTime = d.startTime || 0;
-                    const endTime = d.endTime > 0 ? d.endTime : video.duration;
-                    const duration = Math.max(endTime - startTime, 0.5);
-
-                    console.log(`⏱️ 片段: ${startTime.toFixed(2)}s - ${endTime.toFixed(2)}s`);
-
-                    if (startTime > 0) {
-                        video.currentTime = startTime;
-                        await new Promise(r => { video.onseeked = r; });
-                    }
-
-                    const fadeInStart = performance.now();
-                    while (performance.now() - fadeInStart < FADE_DURATION * 1000) {
-                        const p = (performance.now() - fadeInStart) / (FADE_DURATION * 1000);
-                        drawFrame(ctx, video, d, Math.min(p, 1), W, H);
-                        await sleepFrame();
-                    }
-
-                    await video.play();
-                    if (audioContext && audioContext.state === 'suspended') {
-                        await audioContext.resume();
-                    }
-
-                    const playStart = performance.now();
-                    const playDuration = Math.max((duration - FADE_DURATION * 2) * 1000, 100);
-                    
-                    let frameCount = 0;
-                    while (performance.now() - playStart < playDuration) {
-                        if (video.currentTime >= endTime) {
-                            video.pause();
-                            break;
-                        }
-                        if (!video.paused && !video.ended) {
-                            drawFrame(ctx, video, d, 1, W, H);
-                            frameCount++;
-                        }
-                        const elapsed = performance.now() - fadeInStart;
-                        const progress = Math.min(elapsed / (duration * 1000), 1);
-                        const overall = ((processedCount - 1 + progress) / totalRanks * 100).toFixed(0);
-                        updateSingleProgress(progressWrap, `第 ${d.rank} 名 (${processedCount}/${totalRanks})...`, overall);
-                        await sleepFrame();
-                    }
-                    video.pause();
-                    console.log(`🎞️ 第 ${d.rank} 名渲染 ${frameCount} 帧`);
-
-                    const fadeOutStart = performance.now();
-                    while (performance.now() - fadeOutStart < FADE_DURATION * 1000) {
-                        const p = (performance.now() - fadeOutStart) / (FADE_DURATION * 1000);
-                        drawFrame(ctx, video, d, 1 - Math.min(p, 1), W, H);
-                        await sleepFrame();
-                    }
-
-                    URL.revokeObjectURL(videoUrl);
-                    video.remove();
-
-                } catch (err) {
-                    console.error(`❌ 处理第 ${d.rank} 名时出错:`, err);
-                    continue;
+                if (startTime > 0) {
+                    video.currentTime = startTime;
+                    await new Promise(r => { video.onseeked = r; });
                 }
+
+                await video.play();
+                if (audioContext && audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+
+                const playStart = performance.now();
+                const totalDuration = duration * 1000;
+                const fadeMs = VIDEO_FADE_DURATION * 1000;
+                const slideMs = UI_SLIDE_DURATION * 1000;
+
+                const videoW = video.videoWidth || 1920;
+                const videoH = video.videoHeight || 1080;
+                const scale = Math.min(W / videoW, H / videoH);
+                const scaledW = videoW * scale;
+                const scaledH = videoH * scale;
+                const offsetX = (W - scaledW) / 2;
+                const offsetY = (H - scaledH) / 2;
+
+                // 音频淡入淡出
+                let gainNode = null;
+                if (currentAudioNode && audioContext) {
+                    gainNode = audioContext.createGain();
+                    currentAudioNode.connect(gainNode);
+                    gainNode.connect(audioDestination);
+                }
+
+                while (performance.now() - playStart < totalDuration) {
+                    const elapsed = performance.now() - playStart;
+                    const progress = elapsed / totalDuration;
+
+                    // 视频淡入淡出
+                    let videoAlpha = 1;
+                    if (elapsed < fadeMs) {
+                        videoAlpha = elapsed / fadeMs;
+                    } else if (elapsed > totalDuration - fadeMs) {
+                        videoAlpha = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
+                    }
+
+                    // UI 滑动
+                    let uiOffset = 0;
+                    
+                    // 第1个视频：从右侧滑入（左UI）
+                    if (vIdx === 0 && elapsed < slideMs) {
+                        uiOffset = W * (1 - elapsed / slideMs); // 从右向左滑入
+                    }
+                    // 最后一个视频：滑出
+                    else if (vIdx === videos.length - 1 && elapsed > totalDuration - slideMs) {
+                        uiOffset = -W * ((elapsed - (totalDuration - slideMs)) / slideMs); // 向左滑出
+                    }
+                    // 中间视频：滑出 + 滑入
+                    else {
+                        if (elapsed < slideMs) {
+                            uiOffset = -W * (1 - elapsed / slideMs); // 从左侧滑入
+                        } else if (elapsed > totalDuration - slideMs) {
+                            uiOffset = W * ((elapsed - (totalDuration - slideMs)) / slideMs); // 向右侧滑出
+                        }
+                    }
+
+                    // 音频淡入淡出
+                    if (gainNode) {
+                        if (elapsed < fadeMs) {
+                            gainNode.gain.value = elapsed / fadeMs;
+                        } else if (elapsed > totalDuration - fadeMs) {
+                            gainNode.gain.value = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
+                        } else {
+                            gainNode.gain.value = 1;
+                        }
+                    }
+
+                    // 绘制画面
+                    drawFrame(ctx, video, d, 1, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, uiOffset);
+
+                    const overall = (vIdx + progress) / totalRanks * 100;
+                    document.getElementById('single-progress-text').textContent = `第 ${d.rank} 名 (${processedCount}/${totalRanks})...`;
+                    document.getElementById('single-progress-percent').textContent = overall.toFixed(0) + '%';
+                    document.getElementById('single-progress-fill').style.width = overall.toFixed(0) + '%';
+
+                    await sleepFrame();
+                }
+
+                video.pause();
             }
 
-            updateSingleProgress(progressWrap, '导出中...', '100');
+            videos.forEach(({ video }) => {
+                URL.revokeObjectURL(video.src);
+                video.remove();
+            });
+
             console.log('📝 所有片段处理完成，停止录制...');
-            
             recorder.stop();
             await recordingComplete;
             console.log('✅ 单个视频生成完成！');
