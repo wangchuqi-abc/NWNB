@@ -1303,52 +1303,51 @@
             ctx.restore();
         }
 
-        // 作品信息（从左侧50px，40%大小->平移到原位并放大到100%）
-        let infoOffsetX = 0;
-        let infoScale = 1;
-        let infoAlpha = 1;
-        if (elapsed < INFO_SLIDE) {
-            const t = elapsed / INFO_SLIDE;
-            infoOffsetX = -50 * (1 - t);
-            infoScale = 0.4 + 0.6 * t;
-            infoAlpha = t;
-        }
-        ctx.save();
-        ctx.translate(infoOffsetX, 0);
-        ctx.scale(infoScale, infoScale);
-        ctx.globalAlpha = uiAlpha * infoAlpha;
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 52px Microsoft YaHei';
-        ctx.textAlign = 'left';
-        const displayName = d.chineseName || d.songName || '';
-        ctx.fillText(displayName, 300, H - 200);
-        ctx.font = '32px Microsoft YaHei';
-        ctx.fillStyle = '#ccc';
-        const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
-        ctx.fillText(artistLine || '', 300, H - 150);
-        ctx.restore();
-
-        // RATE背景图（半透明，从左侧50px平移）
-        if (assets.scoreBg) {
-            const bgW = assets.scoreBg.naturalWidth || 300;
-            const bgH = assets.scoreBg.naturalHeight || 100;
-            let bgOffsetX = 0;
-            let bgScale = 1;
-            let bgAlpha = 0.5;
-            if (elapsed < INFO_SLIDE) {
-                const t = elapsed / INFO_SLIDE;
-                bgOffsetX = -50 * (1 - t);
-                bgScale = 0.4 + 0.6 * t;
-                bgAlpha = 0.5 * t;
-            }
-            ctx.save();
-            ctx.translate(W - bgW, 0);
-            ctx.translate(bgOffsetX, 0);
-            ctx.scale(bgScale, bgScale);
-            ctx.globalAlpha = bgAlpha;
-            safeDrawImage(ctx, assets.scoreBg, 0, 0, bgW, bgH);
-            ctx.restore();
-        }
+        // 作品信息（从正常位置左侧50px，40%大小->平移到原位并放大到100%）
+let infoOffsetX = 0;
+let infoScale = 1;
+let infoAlpha = 1;
+if (elapsed < INFO_SLIDE) {
+    const t = elapsed / INFO_SLIDE;
+    infoOffsetX = -50 * (1 - t);
+    infoScale = 0.4 + 0.6 * t;
+    infoAlpha = t;
+}
+ctx.save();
+ctx.translate(300 + infoOffsetX, H - 200);  // 基于正常位置x=300做偏移
+ctx.scale(infoScale, infoScale);
+ctx.globalAlpha = uiAlpha * infoAlpha;
+ctx.fillStyle = '#fff';
+ctx.font = 'bold 52px Microsoft YaHei';
+ctx.textAlign = 'left';
+const displayName = d.chineseName || d.songName || '';
+ctx.fillText(displayName, 0, 0);  // 在(0,0)绘制，因为translate已定位
+ctx.font = '32px Microsoft YaHei';
+ctx.fillStyle = '#ccc';
+const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
+ctx.fillText(artistLine || '', 0, 50);  // 歌姬在歌名下方50px
+ctx.restore();
+        // RATE背景图（半透明，从正常位置左侧50px平移）
+if (assets.scoreBg) {
+    const bgW = assets.scoreBg.naturalWidth || 300;
+    const bgH = assets.scoreBg.naturalHeight || 100;
+    let bgOffsetX = 0;
+    let bgScale = 1;
+    let bgAlpha = 0.5;
+    if (elapsed < INFO_SLIDE) {
+        const t = elapsed / INFO_SLIDE;
+        bgOffsetX = -50 * (1 - t);
+        bgScale = 0.4 + 0.6 * t;
+        bgAlpha = 0.5 * t;
+    }
+    ctx.save();
+    ctx.translate(W - bgW + bgOffsetX, 0);  // 基于正常位置x=W-bgW做偏移
+    ctx.scale(bgScale, bgScale);
+    ctx.globalAlpha = bgAlpha;
+    safeDrawImage(ctx, assets.scoreBg, 0, 0, bgW, bgH);
+    ctx.restore();
+}
+        
 
         // RATE和总分文字
         let textAlpha = 1;
