@@ -744,7 +744,7 @@
     </div>
 
     <!-- ==================== 版本信息 ==================== -->
-    <div id="version-info">版本 5.4 (2026-09-01) — 视频硬切，UI单独淡入淡出，无缝衔接</div>
+    <div id="version-info">版本 6.0 (2026-09-04) — 视频淡入淡出，UI分阶段转场，三种淡出类型可选</div>
 
     <script>
         // ============================================================
@@ -896,7 +896,9 @@
             totalScore: '',
             videoFile: null,
             startTime: 0,
-            endTime: 0
+            endTime: 0,
+            overlayText: '',
+            fadeOutType: '1'
         }));
 
         const assets = {};
@@ -1089,6 +1091,18 @@
                                 </div>
                                 <button onclick="openVideoTrimModal(${i})" style="margin-top: 8px; padding: 6px 12px; background: #3498db; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" ${d.videoFile ? '' : 'disabled'}>✂️ 裁剪片段</button>
                             </div>
+                            <div class="form-group-sm full-width">
+                                <label>🏷️ 标题上方文字（可选，半透明，不跟随转场）：</label>
+                                <input type="text" placeholder="如：本周特别推荐、VOCALOID精选..." value="${d.overlayText}" oninput="updateField(${i}, 'overlayText', this.value)">
+                            </div>
+                            <div class="form-group-sm full-width">
+                                <label>🎬 视频淡出转场类型：</label>
+                                <select onchange="updateField(${i}, 'fadeOutType', this.value)">
+                                    <option value="1" ${d.fadeOutType === '1' || d.fadeOutType === undefined ? 'selected' : ''}>类型1：UI/数字/作品信息0.3秒淡出，视频和音频0.5秒淡出</option>
+                                    <option value="2" ${d.fadeOutType === '2' ? 'selected' : ''}>类型2：UI/数字/作品信息瞬间消失，视频和音频硬切</option>
+                                    <option value="3" ${d.fadeOutType === '3' ? 'selected' : ''}>类型3：UI/数字/作品信息0.1秒淡出，视频向上移动，音频继续播放</option>
+                                </select>
+                            </div>
                             <div class="form-group-sm">
                                 <label>排名变化类型：</label>
                                 <select onchange="updateField(${i}, 'changeType', this.value)">
@@ -1184,62 +1198,37 @@
             
             safeDrawImage(ctx, bg, x, y, imgW, imgH);
             
-            // === 修改点：调整 RATE 文字位置 ===
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 30px BiaoXiaoZhi, Microsoft YaHei, sans-serif'; // 调小一点
+            ctx.font = 'bold 30px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             var rateText = d.rate || '';
-            
-            // 将 RATE 放在左侧边缘
             ctx.fillText('Rate: ' + rateText, x + imgW * 0.05, y + imgH / 2);
             
-            // === 修改点：调整总分数字位置 ===
             var score = d.totalScore || '0';
             var paddedScore = String(score).padStart(8, '0');
-            ctx.font = 'bold 60px BiaoXiaoZhi, Microsoft YaHei, sans-serif'; // 调小一点
+            ctx.font = 'bold 60px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
             ctx.textAlign = 'right';
             ctx.textBaseline = 'middle';
-            
-            // 将总分数字放在背景图右侧，留出一定边距
             ctx.fillText(paddedScore, x + imgW - 20, y + imgH / 2);
         }
 
-        function drawPreview(rankIndex) {
-            const canvas = document.getElementById('preview-canvas');
-            const ctx = canvas.getContext('2d');
-            const d = rankData[rankIndex];
-            const W = 1920, H = 1080;
-            currentPreviewRank = rankIndex;
+        // ===== 完整 UI 绘制函数（淡入转场 + 淡出转场）=====
+        function drawUI(ctx, d, W, H, uiAlpha, elapsed) {
+            // 转场时间轴
+            const UI_FADE = 0.3;
+            const RANK_FADE = 0.3;
+            const RANK_SCALE = 0.3;
+            const SYMBOL_ROTATE = 0.3;
+            const INFO_SLIDE = 0.2;
+            const INFO_SCALE = 0.2;
+            const NUM_FADE = 0.3;
+            const NUM_SCALE = 0.1;
 
-            ctx.fillStyle = '#1a1a2e';
-            ctx.fillRect(0, 0, W, H);
+            ctx.globalAlpha = uiAlpha;
 
-            drawScoreBg(ctx, W, H, d);
-
-            if (d.videoFile) {
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.fillRect(100, 100, W - 200, H - 400);
-                ctx.fillStyle = '#666';
-                ctx.font = '30px Microsoft YaHei';
-                ctx.textAlign = 'center';
-                ctx.fillText('🎬 视频已选择', W/2, H/2 - 50);
-                ctx.font = '20px Microsoft YaHei';
-                ctx.fillStyle = '#888';
-                ctx.fillText('点击"开始生成"查看最终效果', W/2, H/2 + 30);
-            }
-            
-            ctx.fillStyle = '#0f3460';
-            ctx.font = 'bold 100px Microsoft YaHei';
-            ctx.textAlign = 'center';
-            ctx.fillText(`#${d.rank}`, W / 2, H / 2 - 30);
-            ctx.font = '36px Microsoft YaHei';
-            ctx.fillStyle = '#888';
-            const previewName = d.chineseName || d.songName || '等待填写...';
-            ctx.fillText(previewName, W / 2, H / 2 + 30);
-
-            ctx.globalAlpha = 1;
-
+            // === 左侧 UI ===
+            // 排名底图
             if (assets.rankCircle) {
                 safeDrawImage(ctx, assets.rankCircle, 60, H - 280, 200, 200);
             } else {
@@ -1251,27 +1240,83 @@
                 ctx.lineWidth = 4;
                 ctx.stroke();
             }
-            
+
+            // 大排名数字（50%淡入 -> 放大到100%）
             var rank = parseInt(d.rank);
-            var fontSize = rank <= 10 ? 130 : 100;
+            var rankScale = 1;
+            var rankAlpha = 1;
+            if (elapsed < RANK_FADE) {
+                rankAlpha = elapsed / RANK_FADE;
+                rankScale = 0.5;
+            } else if (elapsed < RANK_FADE + RANK_SCALE) {
+                rankAlpha = 1;
+                rankScale = 0.5 + 0.5 * ((elapsed - RANK_FADE) / RANK_SCALE);
+            }
+            var fontSize = (rank <= 10 ? 130 : 100) * rankScale;
             ctx.fillStyle = '#56ab2f';
             ctx.font = 'bold ' + fontSize + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
+            ctx.globalAlpha = uiAlpha * rankAlpha;
             ctx.fillText(String(d.rank), 160, H - 180);
 
+            // 变化符号（倒立 -> 逆时针旋转 -> 转回原位）
             const changeImg = getChangeImage(d.changeType);
             if (changeImg) {
                 const size = 120;
-                safeDrawImage(ctx, changeImg, 260 - size / 2, H - 80 - size / 2, size, size);
+                let rotation = 0;
+                if (elapsed > UI_FADE && elapsed < UI_FADE + SYMBOL_ROTATE) {
+                    const t = (elapsed - UI_FADE) / SYMBOL_ROTATE;
+                    // 先转20度，再转回0
+                    if (t < 0.5) {
+                        rotation = -20 * Math.PI / 180 * (t / 0.5); // 逆时针偏20度
+                    } else {
+                        rotation = -20 * Math.PI / 180 * (1 - (t - 0.5) / 0.5); // 转回0
+                    }
+                }
+                ctx.save();
+                ctx.translate(260, H - 80);
+                ctx.rotate(rotation);
+                ctx.globalAlpha = uiAlpha * (elapsed < UI_FADE ? elapsed / UI_FADE : 1);
+                ctx.drawImage(changeImg, -size / 2, -size / 2, size, size);
+                ctx.restore();
             } else {
                 const changeLabels = { new: 'NEW', up: '↑', down: '↓', flat: '—', re: 'RE' };
+                let rotation = 0;
+                if (elapsed > UI_FADE && elapsed < UI_FADE + SYMBOL_ROTATE) {
+                    const t = (elapsed - UI_FADE) / SYMBOL_ROTATE;
+                    if (t < 0.5) {
+                        rotation = -20 * Math.PI / 180 * (t / 0.5);
+                    } else {
+                        rotation = -20 * Math.PI / 180 * (1 - (t - 0.5) / 0.5);
+                    }
+                }
+                ctx.save();
+                ctx.translate(260, H - 50);
+                ctx.rotate(rotation);
+                ctx.globalAlpha = uiAlpha * (elapsed < UI_FADE ? elapsed / UI_FADE : 1);
                 ctx.fillStyle = '#fff';
                 ctx.font = 'bold 40px Microsoft YaHei';
                 ctx.textAlign = 'center';
-                ctx.fillText(changeLabels[d.changeType] || '', 260, H - 50);
+                ctx.fillText(changeLabels[d.changeType] || '', 0, 0);
+                ctx.restore();
             }
 
+            // 作品信息（从左侧50px，40%大小 -> 平移到原位并放大到100%）
+            let infoOffsetX = 0;
+            let infoScale = 1;
+            let infoAlpha = 1;
+            if (elapsed < INFO_SLIDE) {
+                const t = elapsed / INFO_SLIDE;
+                infoOffsetX = -50 * (1 - t);
+                infoScale = 0.4 + 0.6 * t;
+                infoAlpha = t;
+            }
+            ctx.save();
+            ctx.translate(infoOffsetX, 0);
+            ctx.scale(infoScale, infoScale);
+            ctx.globalAlpha = uiAlpha * infoAlpha;
+            
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 52px Microsoft YaHei';
             ctx.textAlign = 'left';
@@ -1281,46 +1326,166 @@
             ctx.fillStyle = '#ccc';
             const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
             ctx.fillText(artistLine || '', 300, H - 150);
+            ctx.restore();
 
+            // === 右侧 UI ===
+            // RATE背景图（从左侧50px，40%大小 -> 平移到原位并放大到100%）
+            if (assets.scoreBg) {
+                const bgW = assets.scoreBg.naturalWidth || 300;
+                const bgH = assets.scoreBg.naturalHeight || 100;
+                let bgOffsetX = 0;
+                let bgScale = 1;
+                let bgAlpha = 1;
+                if (elapsed < INFO_SLIDE) {
+                    const t = elapsed / INFO_SLIDE;
+                    bgOffsetX = -50 * (1 - t);
+                    bgScale = 0.4 + 0.6 * t;
+                    bgAlpha = t;
+                }
+                ctx.save();
+                ctx.translate(W - bgW, 0);
+                ctx.translate(bgOffsetX, 0);
+                ctx.scale(bgScale, bgScale);
+                ctx.globalAlpha = uiAlpha * bgAlpha;
+                safeDrawImage(ctx, assets.scoreBg, 0, 0, bgW, bgH);
+                ctx.restore();
+            }
+
+            // RATE和总分文字（淡入0.3秒）
+            let textAlpha = 1;
+            if (elapsed < UI_FADE) {
+                textAlpha = elapsed / UI_FADE;
+            }
+            ctx.globalAlpha = uiAlpha * textAlpha;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 30px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            var rateText = d.rate || '';
+            ctx.fillText('Rate: ' + rateText, W - (assets.scoreBg?.naturalWidth || 300) + 40, 60);
+            var score = d.totalScore || '0';
+            var paddedScore = String(score).padStart(8, '0');
+            ctx.font = 'bold 60px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(paddedScore, W - 20, 60);
+
+            // 历史排名数字（上周排名、在榜周数、最高排名）
+            const historyData = [d.lastWeekRank || '-', d.weeksOnChart || '-', d.highestRank || '-'];
+            const historyLabels = ['上周排名', '在榜周数', '最高排名'];
+            const historyX = [W - 430, W - 290, W - 150];
+            
+            historyData.forEach((v, i) => {
+                let numScale = 1;
+                let numAlpha = 1;
+                // 每个数字依次转场
+                const startTime = UI_FADE + i * (NUM_FADE + NUM_SCALE);
+                const endTime = startTime + NUM_FADE + NUM_SCALE;
+                
+                if (elapsed < startTime) {
+                    numAlpha = 0;
+                    numScale = 0.6;
+                } else if (elapsed < startTime + NUM_FADE) {
+                    numAlpha = (elapsed - startTime) / NUM_FADE;
+                    numScale = 0.6;
+                } else if (elapsed < endTime) {
+                    numAlpha = 1;
+                    numScale = 0.6 + 0.4 * ((elapsed - startTime - NUM_FADE) / NUM_SCALE);
+                }
+                
+                ctx.globalAlpha = uiAlpha * numAlpha;
+                ctx.fillStyle = '#56ab2f';
+                ctx.font = 'bold ' + (64 * numScale) + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(v, historyX[i], H - 115);
+                
+                // 标签
+                ctx.fillStyle = '#fff';
+                ctx.font = '18px Microsoft YaHei';
+                ctx.globalAlpha = uiAlpha * numAlpha;
+                ctx.fillText(historyLabels[i], historyX[i], H - 38);
+            });
+
+            // 历史顶图和底图
+            if (assets.historyTop) {
+                safeDrawImage(ctx, assets.historyTop, W - 520, H - 55, 460, 35);
+            } else {
+                ctx.fillStyle = 'rgba(26, 37, 47, 0.6)';
+                ctx.fillRect(W - 520, H - 55, 460, 35);
+            }
             if (assets.historyBottom) {
                 safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
             } else {
                 ctx.fillStyle = 'rgba(26, 37, 47, 0.8)';
                 ctx.fillRect(W - 520, H - 170, 460, 120);
             }
-            
-            ctx.fillStyle = '#56ab2f';
-            ctx.font = 'bold 64px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            [d.lastWeekRank || '-', d.weeksOnChart || '-', d.highestRank || '-'].forEach((v, i) => {
-                ctx.fillText(v, W - 430 + i * 140, H - 115);
-            });
-
-            if (assets.historyTop) {
-                safeDrawImage(ctx, assets.historyTop, W - 520, H - 55, 460, 35);
-            } else {
-                ctx.fillStyle = 'rgba(26, 37, 47, 0.6)';
-                ctx.fillRect(W - 520, H - 55, 460, 35);
-                ctx.fillStyle = '#fff';
-                ctx.font = '18px Microsoft YaHei';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                const labels = ['上周排名', '在榜周数', '最高排名'];
-                labels.forEach((label, i) => {
-                    ctx.fillText(label, W - 430 + i * 140, H - 38);
-                });
-            }
 
             ctx.globalAlpha = 1;
             ctx.textBaseline = 'alphabetic';
-            const placeholder = document.getElementById('canvas-placeholder');
-            if (placeholder) placeholder.style.display = 'none';
         }
 
-        // ===== 核心修改：视频淡入淡出，UI 左右滑动 =====
-        function drawFrame(ctx, video, d, uiAlpha, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, uiOffset) {
-            // 视频：跟随 videoAlpha 淡入淡出
+        // ===== 核心修改：视频淡入淡出，UI分阶段转场，标题文字不跟随转场 =====
+        function drawFrame(ctx, video, d, uiAlpha, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, elapsed, isFadingOut, fadeOutType, videoOffsetY, nextVideoFrame) {
+            // 清屏
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, W, H);
+
+            // === 类型3：视频向上移动，画面下方显示下一个视频第一帧 ===
+            if (isFadingOut && fadeOutType === '3') {
+                // 绘制当前视频（向上移动）
+                if (video && videoAlpha > 0) {
+                    ctx.globalAlpha = 1;
+                    try {
+                        ctx.drawImage(video, offsetX, offsetY + videoOffsetY, scaledW, scaledH);
+                    } catch (e) {}
+                }
+                
+                // 绘制下一个视频的第一帧画面（固定在画面下方）
+                if (nextVideoFrame) {
+                    ctx.globalAlpha = 1;
+                    try {
+                        ctx.drawImage(nextVideoFrame, 0, 0, W, H);
+                    } catch (e) {}
+                }
+                
+                ctx.globalAlpha = 1;
+                return;
+            }
+
+            // === 类型2：瞬间硬切，UI瞬间消失 ===
+            if (isFadingOut && fadeOutType === '2') {
+                // 直接绘制视频（不淡出）
+                ctx.globalAlpha = 1;
+                try {
+                    ctx.drawImage(video, offsetX, offsetY, scaledW, scaledH);
+                } catch (e) {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, W, H);
+                }
+                return;
+            }
+
+            // === 类型1：正常淡出 ===
+            if (isFadingOut && fadeOutType === '1') {
+                // 视频淡出
+                ctx.globalAlpha = videoAlpha;
+                try {
+                    ctx.drawImage(video, offsetX, offsetY, scaledW, scaledH);
+                } catch (e) {
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, W, H);
+                }
+                
+                // UI淡出
+                if (uiAlpha > 0) {
+                    drawUI(ctx, d, W, H, uiAlpha, elapsed);
+                }
+                ctx.globalAlpha = 1;
+                return;
+            }
+
+            // === 正常播放（淡入阶段）===
+            // 视频淡入
             ctx.globalAlpha = videoAlpha;
             try {
                 ctx.drawImage(video, offsetX, offsetY, scaledW, scaledH);
@@ -1329,94 +1494,23 @@
                 ctx.fillRect(0, 0, W, H);
             }
 
-            // UI：跟随 uiAlpha 淡入淡出 + 左右滑动
-            ctx.globalAlpha = uiAlpha;
-
-            // === 左侧 UI（向左移动）===
-            ctx.save();
-            ctx.translate(-uiOffset, 0); // 左移
-
-            drawScoreBg(ctx, W, H, d);
-
-            if (assets.rankCircle) {
-                safeDrawImage(ctx, assets.rankCircle, 60, H - 280, 200, 200);
-            } else {
-                ctx.beginPath();
-                ctx.arc(160, H - 180, 100, 0, Math.PI * 2);
-                ctx.fillStyle = '#2c3e50';
-                ctx.fill();
-                ctx.strokeStyle = '#56ab2f';
-                ctx.lineWidth = 4;
-                ctx.stroke();
-            }
-            
-            var rank = parseInt(d.rank);
-            var fontSize = rank <= 10 ? 130 : 100;
-            ctx.fillStyle = '#56ab2f';
-            ctx.font = 'bold ' + fontSize + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(String(d.rank), 160, H - 180);
-
-            const changeImg = getChangeImage(d.changeType);
-            if (changeImg) {
-                const size = 120;
-                safeDrawImage(ctx, changeImg, 260 - size / 2, H - 80 - size / 2, size, size);
-            } else {
-                const changeLabels = { new: 'NEW', up: '↑', down: '↓', flat: '—', re: 'RE' };
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 40px Microsoft YaHei';
-                ctx.textAlign = 'center';
-                ctx.fillText(changeLabels[d.changeType] || '', 260, H - 50);
-            }
-
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 52px Microsoft YaHei';
-            ctx.textAlign = 'left';
-            const displayName = d.chineseName || d.songName || '';
-            ctx.fillText(displayName, 300, H - 200);
-            ctx.font = '32px Microsoft YaHei';
-            ctx.fillStyle = '#ccc';
-            const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
-            ctx.fillText(artistLine || '', 300, H - 150);
-
-            ctx.restore();
-
-            // === 右侧 UI（向右移动）===
-            ctx.save();
-            ctx.translate(uiOffset, 0); // 右移
-
-            if (assets.historyBottom) {
-                safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
-            } else {
-                ctx.fillStyle = 'rgba(26, 37, 47, 0.8)';
-                ctx.fillRect(W - 520, H - 170, 460, 120);
-            }
-            
-            ctx.fillStyle = '#56ab2f';
-            ctx.font = 'bold 64px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            [d.lastWeekRank || '-', d.weeksOnChart || '-', d.highestRank || '-'].forEach((v, i) => {
-                ctx.fillText(v, W - 430 + i * 140, H - 115);
-            });
-
-            if (assets.historyTop) {
-                safeDrawImage(ctx, assets.historyTop, W - 520, H - 55, 460, 35);
-            } else {
-                ctx.fillStyle = 'rgba(26, 37, 47, 0.6)';
-                ctx.fillRect(W - 520, H - 55, 460, 35);
-                ctx.fillStyle = '#fff';
-                ctx.font = '18px Microsoft YaHei';
+            // 不跟随转场的半透明标题文字
+            if (d.overlayText) {
+                ctx.save();
+                ctx.globalAlpha = 0.5;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 48px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                const labels = ['上周排名', '在榜周数', '最高排名'];
-                labels.forEach((label, i) => {
-                    ctx.fillText(label, W - 430 + i * 140, H - 38);
-                });
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 4;
+                ctx.fillText(d.overlayText, W / 2, 120);
+                ctx.restore();
             }
 
-            ctx.restore();
+            // UI绘制（淡入转场）
+            drawUI(ctx, d, W, H, uiAlpha, elapsed);
 
             ctx.globalAlpha = 1;
             ctx.textBaseline = 'alphabetic';
@@ -1458,7 +1552,7 @@
             }
         }
 
-        // ==================== 视频生成核心（视频淡入淡出 + UI 左右滑动） ====================
+        // ==================== 视频生成核心 ====================
         async function startVideoGeneration() {
             const missing = rankData.filter(d => !d.videoFile);
             if (missing.length > 0) {
@@ -1495,9 +1589,8 @@
             const ctx = canvas.getContext('2d');
             const W = 1920, H = 1080;
             
-            // 修改：视频淡入淡出时长 0.5s，UI 滑动时长 1s
             const VIDEO_FADE_DURATION = 0.5;
-            const UI_SLIDE_DURATION = 1.0;
+            const UI_FADE_DURATION = 0.3;
 
             try {
                 await document.fonts.load('bold 130px BiaoXiaoZhi');
@@ -1580,7 +1673,7 @@
                 videos.push({ video: v, data: d, index: i });
             }
 
-            // ===== 逐个播放，视频淡入淡出 + UI 左右滑动 =====
+            // ===== 逐个播放 =====
             for (let vIdx = 0; vIdx < videos.length; vIdx++) {
                 const { video, data: d, index: i } = videos[vIdx];
                 const processedCount = videos.length - vIdx;
@@ -1606,7 +1699,6 @@
                 const playStart = performance.now();
                 const totalDuration = duration * 1000;
                 const fadeMs = VIDEO_FADE_DURATION * 1000;
-                const slideMs = UI_SLIDE_DURATION * 1000;
 
                 // 计算视频画面缩放参数
                 const videoW = video.videoWidth || 1920;
@@ -1637,27 +1729,7 @@
                         videoAlpha = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
                     }
 
-                    // UI 滑动（左移 + 右移）
-                    let uiOffset = 0;
-                    
-                    // 第1个视频：从右侧滑入（左UI）
-                    if (vIdx === 0 && elapsed < slideMs) {
-                        uiOffset = W * (1 - elapsed / slideMs); // 从右向左滑入
-                    }
-                    // 最后一个视频：滑出
-                    else if (vIdx === videos.length - 1 && elapsed > totalDuration - slideMs) {
-                        uiOffset = -W * ((elapsed - (totalDuration - slideMs)) / slideMs); // 向左滑出
-                    }
-                    // 中间视频：滑出 + 滑入
-                    else {
-                        if (elapsed < slideMs) {
-                            uiOffset = -W * (1 - elapsed / slideMs); // 从左侧滑入
-                        } else if (elapsed > totalDuration - slideMs) {
-                            uiOffset = W * ((elapsed - (totalDuration - slideMs)) / slideMs); // 向右侧滑出
-                        }
-                    }
-
-                    // 音频淡入淡出（0.5s）
+                    // 音频淡入淡出
                     if (gainNode) {
                         if (elapsed < fadeMs) {
                             gainNode.gain.value = elapsed / fadeMs;
@@ -1668,8 +1740,8 @@
                         }
                     }
 
-                    // 绘制画面（视频淡入淡出 + UI 滑动）
-                    drawFrame(ctx, video, d, 1, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, uiOffset);
+                    // 绘制画面
+                    drawFrame(ctx, video, d, 1, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, elapsed / 1000, false, null, 0, null);
 
                     // 更新进度
                     const overall = (vIdx + progress) / TOTAL_RANKS * 100;
@@ -1684,7 +1756,7 @@
             }
 
             // 清理视频资源
-            videos.forEach(({ video, data }) => {
+            videos.forEach(({ video }) => {
                 URL.revokeObjectURL(video.src);
                 video.remove();
             });
@@ -1695,17 +1767,11 @@
             console.log('✅ 视频生成完成！');
         }
 
-        function updateProgress(wrap, text, percent) {
-            document.getElementById('progress-text').textContent = text;
-            document.getElementById('progress-percent').textContent = percent + '%';
-            document.getElementById('progress-fill').style.width = percent + '%';
-        }
-
         function sleepFrame() {
             return new Promise(r => requestAnimationFrame(r));
         }
 
-        // ==================== 单个视频生成（同步修改） ====================
+        // ==================== 单个视频生成 ====================
         function updateSingleRankPreview() {
             const startRank = parseInt(document.getElementById('single-start-rank').value) || 1;
             const endRank = parseInt(document.getElementById('single-end-rank').value) || 5;
@@ -1774,6 +1840,18 @@
                                         <span class="file-name" id="single-fname-${actualRank - 1}">${d.videoFile ? d.videoFile.name : '未选择'}</span>
                                     </div>
                                     <button onclick="openVideoTrimModal(${actualRank - 1})" style="margin-top: 8px; padding: 6px 12px; background: #3498db; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" ${d.videoFile ? '' : 'disabled'}>✂️ 裁剪片段</button>
+                                </div>
+                                <div class="form-group-sm full-width">
+                                    <label>🏷️ 标题上方文字（可选，半透明，不跟随转场）：</label>
+                                    <input type="text" placeholder="如：本周特别推荐、VOCALOID精选..." value="${d.overlayText}" oninput="updateSingleField(${actualRank - 1}, 'overlayText', this.value)">
+                                </div>
+                                <div class="form-group-sm full-width">
+                                    <label>🎬 视频淡出转场类型：</label>
+                                    <select onchange="updateSingleField(${actualRank - 1}, 'fadeOutType', this.value)">
+                                        <option value="1" ${d.fadeOutType === '1' || d.fadeOutType === undefined ? 'selected' : ''}>类型1：UI/数字/作品信息0.3秒淡出，视频和音频0.5秒淡出</option>
+                                        <option value="2" ${d.fadeOutType === '2' ? 'selected' : ''}>类型2：UI/数字/作品信息瞬间消失，视频和音频硬切</option>
+                                        <option value="3" ${d.fadeOutType === '3' ? 'selected' : ''}>类型3：UI/数字/作品信息0.1秒淡出，视频向上移动，音频继续播放</option>
+                                    </select>
                                 </div>
                                 <div class="form-group-sm">
                                     <label>排名变化类型：</label>
@@ -1864,105 +1942,22 @@
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, W, H);
 
-            drawScoreBg(ctx, W, H, d);
-
-            if (d.videoFile) {
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.fillRect(100, 100, W - 200, H - 400);
-                ctx.fillStyle = '#666';
-                ctx.font = '30px Microsoft YaHei';
-                ctx.textAlign = 'center';
-                ctx.fillText('🎬 视频已选择', W/2, H/2 - 50);
-                ctx.font = '20px Microsoft YaHei';
-                ctx.fillStyle = '#888';
-                ctx.fillText('点击"开始生成"查看最终效果', W/2, H/2 + 30);
-            }
-
-            ctx.fillStyle = '#0f3460';
-            ctx.font = 'bold 100px Microsoft YaHei';
-            ctx.textAlign = 'center';
-            ctx.fillText(`#${d.rank}`, W / 2, H / 2 - 30);
-            ctx.font = '36px Microsoft YaHei';
-            ctx.fillStyle = '#888';
-            const previewName = d.chineseName || d.songName || '等待填写...';
-            ctx.fillText(previewName, W / 2, H / 2 + 30);
-
-            ctx.globalAlpha = 1;
-
-            if (assets.rankCircle) {
-                safeDrawImage(ctx, assets.rankCircle, 60, H - 280, 200, 200);
-            } else {
-                ctx.beginPath();
-                ctx.arc(160, H - 180, 100, 0, Math.PI * 2);
-                ctx.fillStyle = '#2c3e50';
-                ctx.fill();
-                ctx.strokeStyle = '#56ab2f';
-                ctx.lineWidth = 4;
-                ctx.stroke();
-            }
-            
-            var rank = parseInt(d.rank);
-            var fontSize = rank <= 10 ? 130 : 100;
-            ctx.fillStyle = '#56ab2f';
-            ctx.font = 'bold ' + fontSize + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(String(d.rank), 160, H - 180);
-
-            const changeImg = getChangeImage(d.changeType);
-            if (changeImg) {
-                const size = 120;
-                safeDrawImage(ctx, changeImg, 260 - size / 2, H - 80 - size / 2, size, size);
-            } else {
-                const changeLabels = { new: 'NEW', up: '↑', down: '↓', flat: '—', re: 'RE' };
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 40px Microsoft YaHei';
-                ctx.textAlign = 'center';
-                ctx.fillText(changeLabels[d.changeType] || '', 260, H - 50);
-            }
-
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 52px Microsoft YaHei';
-            ctx.textAlign = 'left';
-            const displayName = d.chineseName || d.songName || '';
-            ctx.fillText(displayName, 300, H - 200);
-            ctx.font = '32px Microsoft YaHei';
-            ctx.fillStyle = '#ccc';
-            const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
-            ctx.fillText(artistLine || '', 300, H - 150);
-
-            if (assets.historyBottom) {
-                safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
-            } else {
-                ctx.fillStyle = 'rgba(26, 37, 47, 0.8)';
-                ctx.fillRect(W - 520, H - 170, 460, 120);
-            }
-            
-            ctx.fillStyle = '#56ab2f';
-            ctx.font = 'bold 64px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            [d.lastWeekRank || '-', d.weeksOnChart || '-', d.highestRank || '-'].forEach((v, i) => {
-                ctx.fillText(v, W - 430 + i * 140, H - 115);
-            });
-
-            if (assets.historyTop) {
-                safeDrawImage(ctx, assets.historyTop, W - 520, H - 55, 460, 35);
-            } else {
-                ctx.fillStyle = 'rgba(26, 37, 47, 0.6)';
-                ctx.fillRect(W - 520, H - 55, 460, 35);
-                ctx.fillStyle = '#fff';
-                ctx.font = '18px Microsoft YaHei';
+            if (d.overlayText) {
+                ctx.save();
+                ctx.globalAlpha = 0.5;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 48px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                const labels = ['上周排名', '在榜周数', '最高排名'];
-                labels.forEach((label, i) => {
-                    ctx.fillText(label, W - 430 + i * 140, H - 38);
-                });
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 4;
+                ctx.fillText(d.overlayText, W / 2, 120);
+                ctx.restore();
             }
 
-            ctx.globalAlpha = 1;
-            ctx.textBaseline = 'alphabetic';
+            drawUI(ctx, d, W, H, 1, 10);
+
             const placeholder = document.getElementById('single-canvas-placeholder');
             if (placeholder) placeholder.style.display = 'none';
         }
@@ -2015,9 +2010,7 @@
             const ctx = canvas.getContext('2d');
             const W = 1920, H = 1080;
             
-            // 修改：视频淡入淡出时长 0.5s，UI 滑动时长 1s
             const VIDEO_FADE_DURATION = 0.5;
-            const UI_SLIDE_DURATION = 1.0;
 
             try {
                 await document.fonts.load('bold 130px BiaoXiaoZhi');
@@ -2127,7 +2120,6 @@
                 const playStart = performance.now();
                 const totalDuration = duration * 1000;
                 const fadeMs = VIDEO_FADE_DURATION * 1000;
-                const slideMs = UI_SLIDE_DURATION * 1000;
 
                 const videoW = video.videoWidth || 1920;
                 const videoH = video.videoHeight || 1080;
@@ -2137,7 +2129,6 @@
                 const offsetX = (W - scaledW) / 2;
                 const offsetY = (H - scaledH) / 2;
 
-                // 音频淡入淡出
                 let gainNode = null;
                 if (currentAudioNode && audioContext) {
                     gainNode = audioContext.createGain();
@@ -2149,7 +2140,6 @@
                     const elapsed = performance.now() - playStart;
                     const progress = elapsed / totalDuration;
 
-                    // 视频淡入淡出
                     let videoAlpha = 1;
                     if (elapsed < fadeMs) {
                         videoAlpha = elapsed / fadeMs;
@@ -2157,27 +2147,6 @@
                         videoAlpha = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
                     }
 
-                    // UI 滑动
-                    let uiOffset = 0;
-                    
-                    // 第1个视频：从右侧滑入（左UI）
-                    if (vIdx === 0 && elapsed < slideMs) {
-                        uiOffset = W * (1 - elapsed / slideMs); // 从右向左滑入
-                    }
-                    // 最后一个视频：滑出
-                    else if (vIdx === videos.length - 1 && elapsed > totalDuration - slideMs) {
-                        uiOffset = -W * ((elapsed - (totalDuration - slideMs)) / slideMs); // 向左滑出
-                    }
-                    // 中间视频：滑出 + 滑入
-                    else {
-                        if (elapsed < slideMs) {
-                            uiOffset = -W * (1 - elapsed / slideMs); // 从左侧滑入
-                        } else if (elapsed > totalDuration - slideMs) {
-                            uiOffset = W * ((elapsed - (totalDuration - slideMs)) / slideMs); // 向右侧滑出
-                        }
-                    }
-
-                    // 音频淡入淡出
                     if (gainNode) {
                         if (elapsed < fadeMs) {
                             gainNode.gain.value = elapsed / fadeMs;
@@ -2188,8 +2157,7 @@
                         }
                     }
 
-                    // 绘制画面
-                    drawFrame(ctx, video, d, 1, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, uiOffset);
+                    drawFrame(ctx, video, d, 1, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, elapsed / 1000, false, null, 0, null);
 
                     const overall = (vIdx + progress) / totalRanks * 100;
                     document.getElementById('single-progress-text').textContent = `第 ${d.rank} 名 (${processedCount}/${totalRanks})...`;
@@ -2211,12 +2179,6 @@
             recorder.stop();
             await recordingComplete;
             console.log('✅ 单个视频生成完成！');
-        }
-
-        function updateSingleProgress(wrap, text, percent) {
-            document.getElementById('single-progress-text').textContent = text;
-            document.getElementById('single-progress-percent').textContent = percent + '%';
-            document.getElementById('single-progress-fill').style.width = percent + '%';
         }
 
         // ==================== 视频裁剪功能 ====================
