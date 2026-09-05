@@ -46,7 +46,7 @@
             text-align: center;
             line-height: 1.5;
             border-bottom: 1px solid #34495e;
-            background-color: rgba(0,0,0,0.18);
+            background: rgba(0,0,0,0.18);
             color: #fff;
         }
         .nav-links { list-style: none; padding: 16px 0; flex: 1; }
@@ -61,9 +61,9 @@
             border-left: 4px solid transparent;
             transition: background 0.3s, color 0.3s;
         }
-        .nav-links li:hover { background-color: rgba(52,73,94,0.6); color: #fff; }
+        .nav-links li:hover { background: rgba(52,73,94,0.6); color: #fff; }
         .nav-links li.active {
-            background-color: #34495e;
+            background: #34495e;
             border-left-color: var(--primary);
             color: #fff;
         }
@@ -74,11 +74,11 @@
             text-align: center;
             font-weight: bold;
             border-radius: 8px;
-            background-color: #c0392b;
+            background: #c0392b;
             color: #fff;
             transition: background 0.3s;
         }
-        .logout-btn:hover { background-color: #e74c3c; }
+        .logout-btn:hover { background: #e74c3c; }
         #sidebar-mask {
             display: none;
             position: fixed;
@@ -89,7 +89,7 @@
         }
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .top-bar {
-            background-color: #fff;
+            background: #fff;
             padding: 14px 22px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             display: flex;
@@ -160,7 +160,7 @@
             transition: border 0.3s, box-shadow 0.3s;
         }
         .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.12); }
-        .form-group input[readonly] { background-color: #f9f9f9; color: var(--text-sub); }
+        .form-group input[readonly] { background: #f9f9f9; color: var(--text-sub); }
         .btn {
             width: 100%;
             padding: 13px 20px;
@@ -671,7 +671,7 @@
                             </div>
                             <div class="form-group">
                                 <label>生成数量：</label>
-                                <input type="text" id="single-rank-count" value="5 个排名" readonly style="background-color:#f9f9f9; color:#7f8c8d;">
+                                <input type="text" id="single-rank-count" value="5 个排名" readonly style="background:#f9f9f9; color:#7f8c8d;">
                             </div>
                         </div>
                         <div class="card">
@@ -1065,43 +1065,20 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         if (index === currentPreviewRank) drawPreview(index);
         setTimeout(() => openVideoTrimModal(index), 300);
     }
-            // ============================================================
+
+    // ============================================================
     // 绘制函数（含入场动画）
     // ============================================================
-    function drawScoreBg(ctx, W, H, d) {
-        const bg = assets.scoreBg;
-        if (!bg) return;
-        const imgW = bg.naturalWidth || 300;
-        const imgH = bg.naturalHeight || 100;
-        const x = W - imgW;
-        const y = 0;
-        safeDrawImage(ctx, bg, x, y, imgW, imgH);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 30px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('Rate: ' + (d.rate || ''), x + 20, imgH / 2);
-        const score = String(d.totalScore || '0').padStart(8, '0');
-        ctx.font = 'bold 60px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillText(score, x + imgW - 20, imgH / 2);
-    }
-
     function drawUI(ctx, d, W, H, elapsed) {
-        // 入场时间参数
         const UI_FADE = 0.3;
         const RANK_FADE = 0.3;
         const SYMBOL_ROTATE = 0.3;
         const INFO_SLIDE = 0.2;
         const NUM_FADE = 0.1;
 
-        // === 所有元素同时开始 ===
         const t = Math.min(elapsed, UI_FADE);
         const uiAlpha = t / UI_FADE;
 
-        ctx.globalAlpha = uiAlpha;
-
-        // --- 排名底图 ---
         if (assets.rankCircle) {
             safeDrawImage(ctx, assets.rankCircle, 60, H - 280, 200, 200);
         } else {
@@ -1114,7 +1091,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
             ctx.stroke();
         }
 
-        // --- 大排名数字：50% → 100% 放大 ---
         const rank = parseInt(d.rank);
         const baseSize = rank <= 10 ? 130 : 100;
         let rankScale = 0.5 + 0.5 * Math.min(elapsed / RANK_FADE, 1);
@@ -1124,13 +1100,11 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         ctx.textBaseline = 'middle';
         ctx.fillText(String(d.rank), 160, H - 180);
 
-        // --- 变化符号：倒立 → 偏左20° → 回正 ---
         const changeImg = getChangeImage(d.changeType);
         const changeLabels = { new: 'NEW', up: '↑', down: '↓', flat: '—', re: 'RE' };
         let rotation = 0;
         if (elapsed < SYMBOL_ROTATE) {
             const p = elapsed / SYMBOL_ROTATE;
-            // 倒立（180°）→ 逆时针偏左20° → 回正
             if (p < 0.5) {
                 rotation = Math.PI - 20 * Math.PI / 180 * (1 - p / 0.5);
             } else {
@@ -1151,30 +1125,30 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         }
         ctx.restore();
 
-        // --- 作品信息：左侧50px，40% → 100% ---
-        let infoSlide = 0;
+        let infoOffsetX = 0;
         let infoScale = 1;
         if (elapsed < INFO_SLIDE) {
             const p = elapsed / INFO_SLIDE;
-            infoSlide = -50 * (1 - p);
+            infoOffsetX = -50 * (1 - p);
             infoScale = 0.4 + 0.6 * p;
         }
+
         ctx.save();
-        ctx.translate(infoSlide, 0);
+        ctx.globalAlpha = uiAlpha;
+        ctx.translate(infoOffsetX, 0);
         ctx.scale(infoScale, infoScale);
+        const displayName = d.chineseName || d.songName || '';
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 52px Microsoft YaHei';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        const displayName = d.chineseName || d.songName || '';
         ctx.fillText(displayName, 300, H - 210);
-        ctx.font = '32px Microsoft YaHei';
-        ctx.fillStyle = '#ccc';
         const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
+        ctx.fillStyle = '#ccc';
+        ctx.font = '32px Microsoft YaHei';
         ctx.fillText(artistLine || '', 300, H - 160);
         ctx.restore();
 
-        // --- RATE背景图：同作品信息 ---
         const bg = assets.scoreBg;
         if (bg) {
             const bgW = bg.naturalWidth || 300;
@@ -1182,17 +1156,17 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
             const bgX = W - bgW;
             const bgY = 0;
             ctx.save();
-            ctx.translate(infoSlide, 0);
+            ctx.globalAlpha = uiAlpha;
+            ctx.translate(infoOffsetX, 0);
             ctx.scale(infoScale, infoScale);
             safeDrawImage(ctx, bg, bgX, bgY, bgW, bgH);
             ctx.restore();
         }
 
-        // --- RATE/总分文字：淡入 ---
-        ctx.globalAlpha = uiAlpha;
         const bgW2 = assets.scoreBg?.naturalWidth || 300;
         const bgH2 = assets.scoreBg?.naturalHeight || 100;
         const bgX2 = W - bgW2;
+        ctx.globalAlpha = uiAlpha;
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 30px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'left';
@@ -1203,33 +1177,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         ctx.textAlign = 'right';
         ctx.fillText(score2, bgX2 + bgW2 - 20, bgH2 / 2);
 
-        // --- 历史排名数字：80% → 100%，同时开始，0.1秒完成 ---
-        const historyData = [d.lastWeekRank || '-', d.weeksOnChart || '-', d.highestRank || '-'];
-        const historyX = [W - 430, W - 290, W - 150];
-        const historyLabels = ['上周排名', '在榜周数', '最高排名'];
-        const numAlpha = Math.min(elapsed / NUM_FADE, 1);
-        const numScale = 0.8 + 0.2 * Math.min(elapsed / NUM_FADE, 1);
-
-        historyData.forEach((v, i) => {
-            ctx.globalAlpha = uiAlpha * numAlpha;
-            ctx.fillStyle = '#56ab2f';
-            ctx.font = 'bold ' + (64 * numScale) + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(v, historyX[i], H - 115);
-            ctx.fillStyle = '#fff';
-            ctx.font = '18px Microsoft YaHei';
-            ctx.fillText(historyLabels[i], historyX[i], H - 38);
-        });
-
-        // --- 历史顶图/底图 ---
-        ctx.globalAlpha = uiAlpha;
-        if (assets.historyTop) {
-            safeDrawImage(ctx, assets.historyTop, W - 520, H - 55, 460, 35);
-        } else {
-            ctx.fillStyle = 'rgba(26,37,47,0.6)';
-            ctx.fillRect(W - 520, H - 55, 460, 35);
-        }
         if (assets.historyBottom) {
             safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
         } else {
@@ -1237,7 +1184,46 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
             ctx.fillRect(W - 520, H - 170, 460, 120);
         }
 
-        // --- 不跟随转场的标题文字 ---
+        const historyData = [d.lastWeekRank || '-', d.weeksOnChart || '-', d.highestRank || '-'];
+        const historyX = [W - 430, W - 290, W - 150];
+        const historyLabels = ['上周排名', '在榜周数', '最高排名'];
+        const numAlpha = Math.min(elapsed / NUM_FADE, 1);
+        const numScale = 0.8 + 0.2 * Math.min(elapsed / NUM_FADE, 1);
+
+        historyData.forEach((v, i) => {
+            ctx.save();
+            ctx.globalAlpha = uiAlpha * numAlpha;
+            ctx.shadowColor = 'rgba(0,0,0,0.9)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 2;
+            ctx.fillStyle = '#56ab2f';
+            ctx.font = 'bold ' + (64 * numScale) + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(v, historyX[i], H - 115);
+            ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+            ctx.lineWidth = 2;
+            ctx.strokeText(v, historyX[i], H - 115);
+            ctx.restore();
+
+            ctx.save();
+            ctx.globalAlpha = uiAlpha * numAlpha;
+            ctx.fillStyle = '#fff';
+            ctx.font = '18px Microsoft YaHei';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(historyLabels[i], historyX[i], H - 38);
+            ctx.restore();
+        });
+
+        if (assets.historyTop) {
+            safeDrawImage(ctx, assets.historyTop, W - 520, H - 55, 460, 35);
+        } else {
+            ctx.fillStyle = 'rgba(26,37,47,0.6)';
+            ctx.fillRect(W - 520, H - 55, 460, 35);
+        }
+
         if (d.overlayText) {
             ctx.save();
             ctx.globalAlpha = 0.5;
@@ -1302,7 +1288,7 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         document.getElementById('single-canvas-placeholder').style.display = 'none';
     }
             // ============================================================
-    // 转场 + 录制核心
+    // 音频混音器
     // ============================================================
     let audioContext = null;
     let currentAudioNode = null;
@@ -1335,12 +1321,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
 
     function sleepFrame() {
         return new Promise(r => requestAnimationFrame(r));
-    }
-
-    function updateProgress(wrap, text, percent) {
-        document.getElementById('progress-text').textContent = text;
-        document.getElementById('progress-percent').textContent = percent + '%';
-        document.getElementById('progress-fill').style.width = percent + '%';
     }
 
     // ============================================================
@@ -1423,7 +1403,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
 
         recorder.start(1000);
 
-        // 预加载全部视频
         const videos = [];
         for (let i = TOTAL_RANKS - 1; i >= 0; i--) {
             const d = rankData[i];
@@ -1433,7 +1412,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
             v.playsInline = true;
             v.crossOrigin = 'anonymous';
             await new Promise(r => { v.onloadedmetadata = r; });
-            // 预截取第一帧
             v.currentTime = 0;
             await new Promise(r => { v.onseeked = r; });
             const frameCanvas = document.createElement('canvas');
@@ -1447,10 +1425,9 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
             const firstFrame = new Image();
             firstFrame.src = frameCanvas.toDataURL('image/png');
             await new Promise(r => { firstFrame.onload = r; });
-            videos.push({ video: v, data: d, index: i, firstFrame: firstFrame });
+            videos.push({ video: v, data: d, index: i, firstFrame });
         }
 
-        // 逐个播放
         for (let vIdx = 0; vIdx < videos.length; vIdx++) {
             const { video, data: d, firstFrame } = videos[vIdx];
             const processedCount = videos.length - vIdx;
@@ -1488,7 +1465,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
                 gainNode.connect(audioDestination);
             }
 
-            // 判断下一个视频是否存在（用于类型3）
             const nextVideo = (vIdx < videos.length - 1) ? videos[vIdx + 1] : null;
 
             while (performance.now() - playStart < totalDuration) {
@@ -1497,30 +1473,19 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
                 const isFadingOut = elapsed > totalDuration - fadeMs;
                 const fadeOutType = d.fadeOutType || '1';
 
-                // 视频透明度
                 let videoAlpha = 1;
                 if (isFadingOut && fadeOutType === '1') {
                     videoAlpha = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
-                } else if (fadeOutType === '2') {
-                    videoAlpha = 1;
-                } else if (fadeOutType === '3') {
-                    videoAlpha = 1;
                 }
 
-                // 音频音量
                 if (gainNode) {
                     if (isFadingOut && fadeOutType === '1') {
                         gainNode.gain.value = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
-                    } else if (fadeOutType === '2') {
-                        gainNode.gain.value = 1;
-                    } else if (fadeOutType === '3') {
-                        gainNode.gain.value = 1;
                     } else {
                         gainNode.gain.value = 1;
                     }
                 }
 
-                // UI透明度（淡入用drawUI内部处理，淡出单独控制）
                 let uiAlpha = 1;
                 if (isFadingOut) {
                     if (fadeOutType === '1') {
@@ -1532,35 +1497,28 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
                     }
                 }
 
-                // ---- 绘制 ----
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, W, H);
 
                 if (fadeOutType === '3' && isFadingOut) {
-                    // 类型3：上滑换场
                     const moveProgress = (elapsed - (totalDuration - fadeMs)) / fadeMs;
                     const moveY = -moveProgress * H;
-                    // 当前视频上移
                     ctx.globalAlpha = 1;
                     ctx.drawImage(video, ox, oy + moveY, sw, sh);
-                    // 下一视频第一帧固定在下方
                     if (nextVideo && nextVideo.firstFrame) {
                         ctx.globalAlpha = 1;
                         const revealY = (1 - moveProgress) * H;
                         ctx.drawImage(nextVideo.firstFrame, 0, revealY, W, H);
                     }
                 } else {
-                    // 类型1或2
                     ctx.globalAlpha = videoAlpha;
                     ctx.drawImage(video, ox, oy, sw, sh);
-                    // UI
                     ctx.globalAlpha = uiAlpha;
                     if (uiAlpha > 0.01) {
                         drawUI(ctx, d, W, H, elapsed / 1000);
                     }
                 }
 
-                // 进度
                 const overall = (vIdx + progress) / TOTAL_RANKS * 100;
                 document.getElementById('progress-text').textContent = `第 ${d.rank} 名 (${processedCount}/${TOTAL_RANKS})...`;
                 document.getElementById('progress-percent').textContent = overall.toFixed(0) + '%';
@@ -1580,7 +1538,8 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         recorder.stop();
         await recordingComplete;
     }
-            // ============================================================
+
+    // ============================================================
     // 单个视频生成
     // ============================================================
     function updateSingleRankPreview() {
