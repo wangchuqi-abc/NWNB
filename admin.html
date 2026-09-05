@@ -1,13 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
-    <!-- 手机端适配核心代码：防止缩放，适配真实设备宽度 -->
+<!-- 版本 6.0 - 真·神级转场 -->
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BliBli_week 副站管理后台</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        /* ===== 加载本地字体：标小智无界黑 ===== */
         @font-face {
             font-family: 'BiaoXiaoZhi';
             src: url('./LogoSCUnboundedSans-Regular-2.ttf') format('truetype');
@@ -15,7 +14,6 @@
             font-style: normal;
             font-display: swap;
         }
-
         :root {
             --primary: #3498db;
             --primary-dark: #2980b9;
@@ -24,7 +22,6 @@
             --text-main: #333;
             --text-sub: #7f8c8d;
         }
-
         body {
             font-family: 'Microsoft YaHei', sans-serif;
             background: linear-gradient(135deg, #e8e8e8, #f5f5f5, #eeeeee);
@@ -33,8 +30,6 @@
             display: flex;
             overflow: hidden;
         }
-
-        /* ==================== 左侧导航栏 ==================== */
         .sidebar {
             width: 250px;
             background: linear-gradient(180deg, var(--dark) 0%, var(--dark-deep) 100%);
@@ -51,7 +46,7 @@
             text-align: center;
             line-height: 1.5;
             border-bottom: 1px solid #34495e;
-            background-color: rgba(0, 0, 0, 0.18);
+            background-color: rgba(0,0,0,0.18);
             color: #fff;
         }
         .nav-links { list-style: none; padding: 16px 0; flex: 1; }
@@ -66,7 +61,7 @@
             border-left: 4px solid transparent;
             transition: background 0.3s, color 0.3s;
         }
-        .nav-links li:hover { background-color: rgba(52, 73, 94, 0.6); color: #fff; }
+        .nav-links li:hover { background-color: rgba(52,73,94,0.6); color: #fff; }
         .nav-links li.active {
             background-color: #34495e;
             border-left-color: var(--primary);
@@ -84,23 +79,19 @@
             transition: background 0.3s;
         }
         .logout-btn:hover { background-color: #e74c3c; }
-
         #sidebar-mask {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0,0,0,0.4);
             z-index: 99;
         }
-
-        /* ==================== 右侧主内容区 ==================== */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
         .top-bar {
             background-color: #fff;
             padding: 14px 22px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -132,31 +123,14 @@
             color: #fff;
             font-size: 0.8rem;
         }
-
         .content-area { flex: 1; padding: 24px; overflow-y: auto; }
         .panel { display: none; animation: fadeIn 0.3s; }
         .panel.active { display: block; }
-        .placeholder-box {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            justify-content: center;
-            align-items: center;
-            height: 220px;
-            color: #95a5a6;
-            font-size: 1.2rem;
-            border: 2px dashed #bdc3c7;
-            border-radius: 12px;
-            background-color: #fafafa;
-            max-width: 600px;
-        }
-        .placeholder-box small { font-size: 0.85rem; color: #b0b8bc; }
-
         .card {
             background: #fff;
             padding: 26px;
             border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             width: 100%;
             max-width: 600px;
         }
@@ -185,7 +159,7 @@
             outline: none;
             transition: border 0.3s, box-shadow 0.3s;
         }
-        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12); }
+        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(52,152,219,0.12); }
         .form-group input[readonly] { background-color: #f9f9f9; color: var(--text-sub); }
         .btn {
             width: 100%;
@@ -199,9 +173,8 @@
             font-weight: 600;
             transition: transform 0.2s, box-shadow 0.3s;
         }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(52, 152, 219, 0.3); }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(52,152,219,0.3); }
         .hint { margin-top: 12px; font-size: 0.8rem; color: var(--text-sub); }
-
         #toast {
             position: fixed;
             left: 50%;
@@ -209,29 +182,27 @@
             transform: translateX(-50%) translateY(-16px);
             padding: 12px 24px;
             border-radius: 10px;
-            background: rgba(44, 62, 80, 0.92);
+            background: rgba(44,62,80,0.92);
             color: #fff;
             font-size: 0.9rem;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             opacity: 0;
             pointer-events: none;
             z-index: 1000;
             transition: opacity 0.3s, transform 0.3s;
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        #toast.success { background: rgba(39, 174, 96, 0.92); }
-        #toast.error { background: rgba(192, 57, 43, 0.92); }
-
+        #toast.success { background: rgba(39,174,96,0.92); }
+        #toast.error { background: rgba(192,57,43,0.92); }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
-            to   { opacity: 1; transform: translateY(0); }
+            to { opacity: 1; transform: translateY(0); }
         }
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
+            0%,100% { transform: translateX(0); }
             25% { transform: translateX(-6px); }
             75% { transform: translateX(6px); }
         }
-
         .sidebar, .main-content { opacity: 0; }
         body.entered .sidebar {
             opacity: 1;
@@ -240,15 +211,13 @@
         body.entered .main-content {
             animation: riseIn 0.55s ease 0.2s both;
         }
-        body.entered .panel.active .card,
-        body.entered .panel.active .placeholder-box {
+        body.entered .panel.active .card {
             animation: fadeIn 0.5s ease both;
         }
         @keyframes riseIn {
             from { opacity: 0; transform: translateY(18px); }
-            to   { opacity: 1; transform: translateY(0); }
+            to { opacity: 1; transform: translateY(0); }
         }
-
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -263,8 +232,6 @@
             .content-area { padding: 16px; }
             .card { padding: 20px; }
         }
-
-        /* ==================== 视频生成面板 ==================== */
         .vg-layout {
             display: grid;
             grid-template-columns: 1fr 480px;
@@ -303,13 +270,12 @@
             transition: transform 0.2s, box-shadow 0.3s;
             white-space: nowrap;
         }
-        .btn-generate:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(86, 171, 47, 0.35); }
+        .btn-generate:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(86,171,47,0.35); }
         .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
-
         .rank-entry {
             background: #fff;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 12px;
             overflow: hidden;
             border-left: 4px solid transparent;
@@ -368,7 +334,6 @@
             border-top: 1px solid #eee;
         }
         .rank-entry.expanded .rank-entry-body { display: block; }
-
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -376,8 +341,7 @@
         }
         .form-grid .full-width { grid-column: 1 / -1; }
         .form-group-sm label { font-size: 0.8rem; margin-bottom: 5px; }
-        .form-group-sm input,
-        .form-group-sm select {
+        .form-group-sm input, .form-group-sm select {
             width: 100%;
             padding: 9px 12px;
             border: 1px solid #ddd;
@@ -386,8 +350,7 @@
             outline: none;
             transition: border 0.3s;
         }
-        .form-group-sm input:focus,
-        .form-group-sm select:focus { border-color: #56ab2f; }
+        .form-group-sm input:focus, .form-group-sm select:focus { border-color: #56ab2f; }
         .file-input-wrap {
             display: flex;
             align-items: center;
@@ -409,7 +372,6 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-
         .vg-preview-section {
             position: sticky;
             top: 0;
@@ -418,7 +380,7 @@
         .preview-card {
             background: #fff;
             border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
             padding: 18px;
         }
         .preview-card h3 {
@@ -431,7 +393,7 @@
         }
         .canvas-wrap {
             width: 100%;
-            aspect-ratio: 16 / 9;
+            aspect-ratio: 16/9;
             background: #000;
             border-radius: 8px;
             overflow: hidden;
@@ -454,7 +416,6 @@
             gap: 8px;
         }
         .canvas-placeholder span { font-size: 2rem; }
-
         .progress-bar-wrap {
             margin-top: 14px;
             display: none;
@@ -480,25 +441,10 @@
             transition: width 0.3s;
             width: 0%;
         }
-
-        .asset-hint {
-            background: #f0f7ff;
-            border: 1px solid #b3d4fc;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 18px;
-            font-size: 0.8rem;
-            color: #1a5276;
-            line-height: 1.6;
-        }
-        .asset-hint strong { color: #2c3e50; }
-
         @media (max-width: 1100px) {
             .vg-layout { grid-template-columns: 1fr; }
             .vg-preview-section { position: static; }
         }
-
-        /* 版本号样式 */
         #version-info {
             position: fixed;
             bottom: 10px;
@@ -514,8 +460,6 @@
             pointer-events: none;
             font-family: 'Microsoft YaHei', sans-serif;
         }
-
-        /* ===== 加载遮罩 ===== */
         #loading-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -540,15 +484,8 @@
             text-align: center;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        #loading-overlay .spinner .icon {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        #loading-overlay .spinner p {
-            color: #666;
-            font-size: 0.95rem;
-            margin: 0;
-        }
+        #loading-overlay .spinner .icon { font-size: 2.5rem; margin-bottom: 10px; }
+        #loading-overlay .spinner p { color: #666; font-size: 0.95rem; margin: 0; }
         #loading-overlay .spinner .dots::after {
             content: '';
             animation: dots 1.2s steps(4, end) infinite;
@@ -559,19 +496,90 @@
             50% { content: '..'; }
             75% { content: '...'; }
         }
+        #trim-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        #trim-modal > div {
+            background: #fff;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #trim-modal h2 { margin-top: 0; color: var(--dark); }
+        #trim-modal .trim-video-wrap {
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        #trim-modal video { width: 100%; max-height: 360px; }
+        #trim-modal .trim-duration {
+            text-align: center;
+            color: var(--text-sub);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .trim-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .trim-grid label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+        .trim-grid input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .trim-grid button {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .trim-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        .trim-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .trim-actions .btn-preview { background: #3498db; color: #fff; }
+        .trim-actions .btn-cancel { background: #95a5a6; color: #fff; }
+        .trim-actions .btn-save { background: var(--primary); color: #fff; }
     </style>
 </head>
 <body>
-
-    <!-- ===== 加载遮罩 ===== -->
-    <div id="loading-overlay" class="show">
-        <div class="spinner">
-            <div class="icon">⏳</div>
-            <p>加载中<span class="dots"></span></p>
-        </div>
+        <div id="loading-overlay" class="show">
+        <div class="spinner"><div class="icon">⏳</div><p>加载中<span class="dots"></span></p></div>
     </div>
 
-    <!-- 左侧导航 -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">哔哩哔哩WEEK<br>工作人员后台</div>
         <ul class="nav-links">
@@ -582,10 +590,8 @@
         <div class="logout-btn" onclick="logout()">🚪 退出登录</div>
     </div>
 
-    <!-- 手机端侧边栏遮罩 -->
     <div id="sidebar-mask" onclick="toggleMenu()"></div>
 
-    <!-- 右侧内容 -->
     <div class="main-content">
         <div class="top-bar">
             <button class="menu-toggle" onclick="toggleMenu()">☰</button>
@@ -594,13 +600,13 @@
         </div>
 
         <div class="content-area">
-            <!-- 面板1：周榜BV号替换 -->
+            <!-- 面板1：BV号替换 -->
             <div id="bv-replace" class="panel active">
                 <div class="card">
                     <h2>当前播放配置</h2>
                     <div class="form-group">
                         <label>当前视频 BV号：</label>
-                        <input type="text" id="current-bv" value="BV1Z4b96sEWy" readonly="">
+                        <input type="text" id="current-bv" value="BV1Z4b96sEWy" readonly>
                     </div>
                     <div class="form-group">
                         <label>更新为新 BV号：</label>
@@ -611,7 +617,7 @@
                 </div>
             </div>
 
-            <!-- 面板 2：批量视频生成 -->
+            <!-- 面板2：批量视频生成 -->
             <div id="video-gen" class="panel">
                 <div class="vg-layout">
                     <div class="vg-form-section">
@@ -619,10 +625,8 @@
                             <h2>周榜视频生成 · Top 20</h2>
                             <button class="btn-generate" id="btn-generate" onclick="startVideoGeneration()">🎬 开始生成视频</button>
                         </div>
-            
                         <div id="rank-entries"></div>
                     </div>
-            
                     <div class="vg-preview-section">
                         <div class="preview-card">
                             <h3>🖼️ 实时预览</h3>
@@ -646,8 +650,8 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- 面板 3：单个视频生成 -->
+
+            <!-- 面板3：单个视频生成 -->
             <div id="single-video-gen" class="panel">
                 <div class="vg-layout">
                     <div class="vg-form-section">
@@ -655,8 +659,7 @@
                             <h2>单个排名视频生成</h2>
                             <button class="btn-generate" id="btn-single-generate" onclick="startSingleVideoGeneration()">🎯 生成选定排名</button>
                         </div>
-            
-                        <div class="card" style="max-width: 500px; margin-bottom: 20px;">
+                        <div class="card" style="max-width:500px; margin-bottom:20px;">
                             <h2>选择排名范围</h2>
                             <div class="form-group">
                                 <label>起始排名：</label>
@@ -668,18 +671,15 @@
                             </div>
                             <div class="form-group">
                                 <label>生成数量：</label>
-                                <input type="text" id="single-rank-count" value="5 个排名" readonly="" style="background-color: #f9f9f9; color: #7f8c8d;">
+                                <input type="text" id="single-rank-count" value="5 个排名" readonly style="background-color:#f9f9f9; color:#7f8c8d;">
                             </div>
                         </div>
-            
                         <div class="card">
                             <h2>待生成排名预览</h2>
-                            <div id="single-rank-preview" style="max-height: 300px; overflow-y: auto;"></div>
+                            <div id="single-rank-preview" style="max-height:300px; overflow-y:auto;"></div>
                         </div>
-
                         <div id="single-rank-forms"></div>
                     </div>
-            
                     <div class="vg-preview-section">
                         <div class="preview-card">
                             <h3>🖼️ 实时预览</h3>
@@ -706,76 +706,63 @@
         </div>
     </div>
 
-    <!-- Toast 提示容器 -->
     <div id="toast"></div>
 
-    <!-- 视频裁剪模态框 -->
-    <div id="trim-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center;">
-        <div style="background: #fff; border-radius: 16px; padding: 30px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto;">
-            <h2 style="margin-top: 0; color: var(--dark);">🎬 裁剪视频片段</h2>
-            <p style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 20px;">选择视频的高潮片段作为周榜使用</p>
-            
-            <div style="background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
-                <video id="trim-video" controls="" style="width: 100%; max-height: 360px;"></video>
+    <div id="trim-modal">
+        <div>
+            <h2>🎬 裁剪视频片段</h2>
+            <p style="color:var(--text-sub); font-size:0.9rem; margin-bottom:20px;">选择视频的高潮片段作为周榜使用</p>
+            <div class="trim-video-wrap">
+                <video id="trim-video" controls></video>
             </div>
-            
-            <div id="trim-duration" style="text-align: center; color: var(--text-sub); margin-bottom: 20px; font-size: 0.9rem;">视频总时长: 0.00 秒</div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div class="trim-duration" id="trim-duration">视频总时长: 0.00 秒</div>
+            <div class="trim-grid">
                 <div>
-                    <label style="display: block; font-size: 0.85rem; color: var(--dark); margin-bottom: 5px;">开始时间（秒）</label>
-                    <input type="number" id="trim-start" step="0.01" min="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
-                    <button onclick="setTrimStart()" style="margin-top: 8px; padding: 6px 12px; background: var(--primary); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">📍 设为当前帧</button>
+                    <label>开始时间（秒）</label>
+                    <input type="number" id="trim-start" step="0.01" min="0">
+                    <button onclick="setTrimStart()">📍 设为当前帧</button>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.85rem; color: var(--dark); margin-bottom: 5px;">结束时间（秒）</label>
-                    <input type="number" id="trim-end" step="0.01" min="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
-                    <button onclick="setTrimEnd()" style="margin-top: 8px; padding: 6px 12px; background: var(--primary); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">📍 设为当前帧</button>
+                    <label>结束时间（秒）</label>
+                    <input type="number" id="trim-end" step="0.01" min="0">
+                    <button onclick="setTrimEnd()">📍 设为当前帧</button>
                 </div>
             </div>
-            
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button onclick="previewTrim()" style="padding: 10px 20px; background: #3498db; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;">▶ 预览片段</button>
-                <button onclick="closeTrimModal()" style="padding: 10px 20px; background: #95a5a6; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;">取消</button>
-                <button onclick="saveTrimSettings()" style="padding: 10px 20px; background: var(--primary); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem;">✅ 保存</button>
+            <div class="trim-actions">
+                <button class="btn-preview" onclick="previewTrim()">▶ 预览片段</button>
+                <button class="btn-cancel" onclick="closeTrimModal()">取消</button>
+                <button class="btn-save" onclick="saveTrimSettings()">✅ 保存</button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== 版本信息 ==================== -->
-    <div id="version-info">版本 6.3 (2026-09-04) — 完整实现</div>
-
+    <div id="version-info">版本 6.0 (2026-09-05) — 真·神级转场</div>
     <script>
-        // ============================================================
-    // 🔐 登录状态检查（必须在页面加载前执行）
+    // ============================================================
+    // 登录检查
     // ============================================================
     (function checkAuth() {
-        const isLoggedIn = localStorage.getItem('bili_admin_logged_in');
-        if (isLoggedIn !== 'true') {
+        if (localStorage.getItem('bili_admin_logged_in') !== 'true') {
             window.location.href = 'login.html';
             return;
         }
         const user = localStorage.getItem('bili_admin_user') || '站长';
         document.addEventListener('DOMContentLoaded', function() {
-            const userEl = document.getElementById('currentUser');
-            if (userEl) userEl.textContent = user;
-            const overlay = document.getElementById('loading-overlay');
-            if (overlay) overlay.classList.remove('show');
+            document.getElementById('currentUser').textContent = user;
+            document.getElementById('loading-overlay').classList.remove('show');
             document.body.classList.add('entered');
         });
     })();
 
-    /* ---------- Toast 提示 ---------- */
     let toastTimer = null;
     function showToast(msg, type) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.className = 'show' + (type ? ' ' + type : '');
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'show' + (type ? ' ' + type : '');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => { toast.className = ''; }, 2600);
+        toastTimer = setTimeout(() => t.className = '', 2600);
     }
 
-    /* ---------- 退出登录 ---------- */
     function logout() {
         if (confirm('确定要退出登录吗？')) {
             localStorage.removeItem('bili_admin_logged_in');
@@ -785,93 +772,70 @@
         }
     }
 
-    /* ---------- 界面交互 ---------- */
-    function switchTab(tabId, element) {
-        document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-links li').forEach(el => el.classList.remove('active'));
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-links li').forEach(l => l.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
-        element.classList.add('active');
-        const titleMap = { 'bv-replace': '周榜 BV 号替换', 'video-gen': '批量视频生成', 'single-video-gen': '单个视频生成' };
-        document.getElementById('page-title').innerText = titleMap[tabId];
+        el.classList.add('active');
+        const map = { 'bv-replace': '周榜 BV 号替换', 'video-gen': '批量视频生成', 'single-video-gen': '单个视频生成' };
+        document.getElementById('page-title').textContent = map[tabId];
         closeSidebarOnMobile();
-        
-        if (tabId === 'video-gen' && !window._vgInitialized) {
+        if (tabId === 'video-gen' && !window._vgInit) {
             renderRankEntries();
             setTimeout(() => drawPreview(0), 300);
-            window._vgInitialized = true;
+            window._vgInit = true;
         }
-        if (tabId === 'single-video-gen') {
-            updateSingleRankPreview();
-        }
+        if (tabId === 'single-video-gen') updateSingleRankPreview();
     }
 
-    function toggleMenu() {
-        document.getElementById('sidebar').classList.toggle('open');
-    }
-
+    function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); }
     function closeSidebarOnMobile() {
-        if (window.innerWidth <= 768) {
-            document.getElementById('sidebar').classList.remove('open');
-        }
+        if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
     }
 
-    /* ---------- 核心功能：替换BV号并下载排名页 ---------- */
     function updateVideo() {
         const newBv = document.getElementById('new-bv').value.trim();
         if (!newBv) { showToast('请输入新的 BV号！', 'error'); return; }
-
-        const indexHtmlTemplate = `<!DOCTYPE html>
+        const tpl = `<!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BliBli_week副站排名</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: radial-gradient(ellipse 60% 40% at 50% -10%, rgba(251, 114, 153, 0.14), transparent 60%), radial-gradient(ellipse 50% 40% at 90% 110%, rgba(0, 174, 236, 0.10), transparent 60%), #121212; color: #fff; font-family: 'Microsoft YaHei', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 20px; }
-        .title-badge { display: inline-block; margin-bottom: 14px; padding: 5px 16px; font-size: 0.8rem; letter-spacing: 2px; color: #fb7299; border: 1px solid rgba(251, 114, 153, 0.45); border-radius: 999px; background: rgba(251, 114, 153, 0.08); }
-        h1 { font-size: 2.5rem; margin-bottom: 32px; text-align: center; background: linear-gradient(90deg, #fb7299, #ffffff 55%, #00aeec); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 24px rgba(251, 114, 153, 0.25); }
-        .video-container { position: relative; width: 100%; max-width: 900px; aspect-ratio: 16 / 9; background: #000; border-radius: 14px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55), 0 0 60px rgba(251, 114, 153, 0.08); animation: fadeUp 0.6s ease both; }
-        .video-container iframe { width: 100%; height: 100%; border: none; }
-        .admin-link { margin-top: 24px; padding: 8px 22px; color: #9aa0a6; text-decoration: none; font-size: 0.9rem; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 999px; transition: color 0.3s, border-color 0.3s, background 0.3s; }
-        .admin-link:hover { color: #fff; border-color: #fb7299; background: rgba(251, 114, 153, 0.12); }
-        .footer-credits { margin-top: 44px; text-align: center; font-size: 0.9rem; color: #888; line-height: 1.8; }
-        .footer-credits a { color: #00aeec; text-decoration: none; transition: color 0.3s; }
-        .footer-credits a:hover { color: #fff; text-decoration: underline; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @media (max-width: 768px) { body { padding: 24px 16px; } h1 { font-size: 1.8rem; margin-bottom: 24px; } .footer-credits { margin-top: 32px; font-size: 0.8rem; } }
-    </style>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BliBli_week副站排名</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{background:radial-gradient(ellipse 60% 40% at 50% -10%,rgba(251,114,153,0.14),transparent 60%),radial-gradient(ellipse 50% 40% at 90% 110%,rgba(0,174,236,0.10),transparent 60%),#121212;color:#fff;font-family:'Microsoft YaHei',sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 20px}
+.title-badge{display:inline-block;margin-bottom:14px;padding:5px 16px;font-size:.8rem;letter-spacing:2px;color:#fb7299;border:1px solid rgba(251,114,153,0.45);border-radius:999px;background:rgba(251,114,153,0.08)}
+h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradient(90deg,#fb7299,#fff 55%,#00aeec);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 24px rgba(251,114,153,0.25)}
+.video-container{position:relative;width:100%;max-width:900px;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);box-shadow:0 4px 24px rgba(0,0,0,0.55),0 0 60px rgba(251,114,153,0.08);animation:fadeUp .6s ease both}
+.video-container iframe{width:100%;height:100%;border:none}
+.admin-link{margin-top:24px;padding:8px 22px;color:#9aa0a6;text-decoration:none;font-size:.9rem;border:1px solid rgba(255,255,255,0.15);border-radius:999px;transition:color .3s,border-color .3s,background .3s}
+.admin-link:hover{color:#fff;border-color:#fb7299;background:rgba(251,114,153,0.12)}
+.footer-credits{margin-top:44px;text-align:center;font-size:.9rem;color:#888;line-height:1.8}
+.footer-credits a{color:#00aeec;text-decoration:none;transition:color .3s}
+.footer-credits a:hover{color:#fff;text-decoration:underline}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){body{padding:24px 16px}h1{font-size:1.8rem;margin-bottom:24px}.footer-credits{margin-top:32px;font-size:.8rem}}
+</style>
 </head>
 <body>
-    <span class="title-badge">WEEKLY RANKING · 周榜</span>
-    <h1>BliBli_week副站排名</h1>
-    <div class="video-container">
-        <iframe src="//player.bilibili.com/player.html?bvid=${newBv}&page=1&high_quality=1&danmaku=0" allowfullscreen="allowfullscreen"></iframe>
-    </div>
-    <a href="login.html" class="admin-link">管理员界面</a>
-    <div class="footer-credits">
-        <p>视频数据来源：<a href="https://vocabili.top/" target="_blank">https://vocabili.top/</a></p>
-        <p>感谢 biliboard 工作室所有人员对此网站的支持</p>
-    </div>
+<span class="title-badge">WEEKLY RANKING · 周榜</span>
+<h1>BliBli_week副站排名</h1>
+<div class="video-container"><iframe src="//player.bilibili.com/player.html?bvid=${newBv}&page=1&high_quality=1&danmaku=0" allowfullscreen></iframe></div>
+<a href="login.html" class="admin-link">管理员界面</a>
+<div class="footer-credits"><p>视频数据来源：<a href="https://vocabili.top/" target="_blank">https://vocabili.top/</a></p><p>感谢 biliboard 工作室所有人员对此网站的支持</p></div>
 </body>
 </html>`;
-
-        const blob = new Blob([indexHtmlTemplate], { type: 'text/html' });
+        const blob = new Blob([tpl], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'index.html';
-        document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
         document.getElementById('current-bv').value = newBv;
         document.getElementById('new-bv').value = '';
         showToast('✅ 文件已生成！请将下载的 index.html 上传到服务器覆盖原文件。', 'success');
     }
 
-    /* ==================== 视频生成功能 ==================== */
+    // ============================================================
+    // 视频生成核心数据
+    // ============================================================
     const TOTAL_RANKS = 20;
     const CHANGE_TYPES = [
         { value: 'new', label: 'New（新上榜）' },
@@ -880,10 +844,16 @@
         { value: 'flat', label: '— 持平' },
         { value: 're', label: 'Re（重新上榜）' }
     ];
+    const FADE_OUT_TYPES = [
+        { value: '1', label: '类型1：柔和淡出（UI 0.3s + 视频音频 0.5s）' },
+        { value: '2', label: '类型2：瞬间硬切（无转场）' },
+        { value: '3', label: '类型3：上滑换场（视频上移，音频继续）' }
+    ];
 
     let rankData = Array.from({ length: TOTAL_RANKS }, (_, i) => ({
         rank: i + 1,
         changeType: i === 0 ? 'new' : 'flat',
+        fadeOutType: '1',
         songName: '',
         chineseName: '',
         producer: '',
@@ -893,11 +863,10 @@
         highestRank: '',
         rate: '',
         totalScore: '',
+        overlayText: '',
         videoFile: null,
         startTime: 0,
-        endTime: 0,
-        overlayText: '',
-        fadeOutType: '1'
+        endTime: 0
     }));
 
     const assets = {};
@@ -912,172 +881,117 @@
         historyBottom: './历史底图.png',
         scoreBg: './分数以及上升尺度.png'
     };
-    const REQUIRED_ASSETS = Object.keys(ASSET_PATHS).length;
     let assetsLoaded = false;
+    let currentPreviewRank = 0;
 
-    // ==================== 素材加载 ====================
     function createFallbackAsset(type) {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const size = 128;
-        canvas.width = size;
-        canvas.height = size;
-        
+        const c = document.createElement('canvas');
+        const ctx = c.getContext('2d');
+        c.width = c.height = 128;
         const colors = {
-            newText: '#4CAF50',
-            upArrow: '#4CAF50',
-            downArrow: '#f44336',
-            flatBar: '#FFC107',
-            reText: '#2196F3',
-            rankCircle: '#2c3e50',
-            historyTop: '#1a252f',
-            historyBottom: '#2c3e50',
-            scoreBg: '#333333'
+            newText: '#4CAF50', upArrow: '#4CAF50', downArrow: '#f44336',
+            flatBar: '#FFC107', reText: '#2196F3', rankCircle: '#2c3e50',
+            historyTop: '#1a252f', historyBottom: '#2c3e50', scoreBg: '#333'
         };
-        
         ctx.fillStyle = colors[type] || '#666';
-        ctx.fillRect(0, 0, size, size);
-        
+        ctx.fillRect(0, 0, 128, 128);
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 24px Microsoft YaHei';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const labels = {
-            newText: 'NEW',
-            upArrow: '↑',
-            downArrow: '↓',
-            flatBar: '—',
-            reText: 'RE',
-            rankCircle: '#',
-            historyTop: 'TOP',
-            historyBottom: 'HISTORY',
-            scoreBg: 'SCORE'
+            newText: 'NEW', upArrow: '↑', downArrow: '↓',
+            flatBar: '—', reText: 'RE', rankCircle: '#',
+            historyTop: 'TOP', historyBottom: 'HISTORY', scoreBg: 'SCORE'
         };
-        ctx.fillText(labels[type] || '?', size/2, size/2);
-        
+        ctx.fillText(labels[type] || '?', 64, 64);
         const img = new Image();
-        img.src = canvas.toDataURL('image/png');
+        img.src = c.toDataURL('image/png');
         return img;
     }
 
     function loadAssetWithRetry(key, path, maxRetries = 3, delay = 500) {
         return new Promise((resolve) => {
             let retries = 0;
-            
-            function attemptLoad() {
+            function attempt() {
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
-                
-                const timeoutId = setTimeout(() => {
+                const timeout = setTimeout(() => {
                     img.src = '';
                     retries++;
                     if (retries < maxRetries) {
-                        console.warn(`素材 ${key} 加载超时，第 ${retries + 1} 次重试...`);
-                        setTimeout(attemptLoad, delay);
+                        console.warn(`素材 ${key} 加载超时，重试 ${retries+1}`);
+                        setTimeout(attempt, delay);
                     } else {
                         console.warn(`素材 ${key} 加载失败，使用降级方案`);
                         resolve(createFallbackAsset(key));
                     }
                 }, 8000);
-                
-                img.onload = () => {
-                    clearTimeout(timeoutId);
-                    console.log(`✅ 素材 ${key} 加载成功`);
-                    resolve(img);
-                };
-                
+                img.onload = () => { clearTimeout(timeout); console.log(`✅ 素材 ${key} 加载成功`); resolve(img); };
                 img.onerror = () => {
-                    clearTimeout(timeoutId);
+                    clearTimeout(timeout);
                     retries++;
                     if (retries < maxRetries) {
-                        console.warn(`素材 ${key} 加载失败，第 ${retries + 1} 次重试...`);
-                        setTimeout(attemptLoad, delay);
+                        console.warn(`素材 ${key} 加载失败，重试 ${retries+1}`);
+                        setTimeout(attempt, delay);
                     } else {
                         console.warn(`素材 ${key} 加载失败，使用降级方案`);
                         resolve(createFallbackAsset(key));
                     }
                 };
-                
                 img.src = path + '?t=' + Date.now() + '_' + Math.random();
             }
-            
-            attemptLoad();
+            attempt();
         });
     }
 
     async function loadAssets() {
         if (assetsLoaded) return;
-        
         console.log('📦 开始加载素材...');
-        
         try {
             await document.fonts.load('bold 130px BiaoXiaoZhi');
             await document.fonts.load('bold 64px BiaoXiaoZhi');
             await document.fonts.load('bold 42px BiaoXiaoZhi');
             await document.fonts.load('bold 84px BiaoXiaoZhi');
             await document.fonts.ready;
-            console.log('✅ 字体已加载完成');
-        } catch (e) {
-            console.warn('⚠️ 字体加载失败:', e);
-        }
-        
+            console.log('✅ 字体已加载');
+        } catch(e) { console.warn('⚠️ 字体加载失败:', e); }
         const keys = Object.keys(ASSET_PATHS);
-        const loadPromises = keys.map(key => 
-            loadAssetWithRetry(key, ASSET_PATHS[key])
-        );
-        
-        const results = await Promise.all(loadPromises);
-        results.forEach((img, index) => {
-            assets[keys[index]] = img;
-        });
-        
+        const results = await Promise.all(keys.map(k => loadAssetWithRetry(k, ASSET_PATHS[k])));
+        results.forEach((img, i) => assets[keys[i]] = img);
         assetsLoaded = true;
-        console.log(`✅ 全部 ${keys.length} 个素材已加载完成`);
-        
-        if (currentPreviewRank !== undefined) {
-            drawPreview(currentPreviewRank);
-        }
+        console.log(`✅ 全部 ${keys.length} 个素材已加载`);
+        if (currentPreviewRank !== undefined) drawPreview(currentPreviewRank);
         const startRank = parseInt(document.getElementById('single-start-rank')?.value) || 1;
         drawSinglePreview(startRank - 1);
     }
 
-    // ==================== 安全绘制函数 ====================
     function safeDrawImage(ctx, img, x, y, w, h) {
         if (img && img.complete && img.naturalWidth > 0) {
-            try {
-                ctx.drawImage(img, x, y, w, h);
-                return true;
-            } catch (e) {
-                return false;
-            }
+            try { ctx.drawImage(img, x, y, w, h); return true; } catch(e) { return false; }
         }
         return false;
     }
 
     function getChangeImage(type) {
-        const map = {
-            new: assets.newText,
-            up: assets.upArrow,
-            down: assets.downArrow,
-            flat: assets.flatBar,
-            re: assets.reText
-        };
+        const map = { new: assets.newText, up: assets.upArrow, down: assets.downArrow, flat: assets.flatBar, re: assets.reText };
         const img = map[type];
-        if (img && img.complete && img.naturalWidth > 0) {
-            return img;
-        }
+        if (img && img.complete && img.naturalWidth > 0) return img;
         return null;
     }
-        // ==================== 渲染排名条目 ====================
+
+    // ============================================================
+    // 渲染排名条目
+    // ============================================================
     function renderRankEntries() {
         const container = document.getElementById('rank-entries');
         container.innerHTML = rankData.map((d, i) => `
-            <div class="rank-entry${i === 0 ? ' expanded active' : ''}" id="entry-${i}">
+            <div class="rank-entry${i===0?' expanded active':''}" id="entry-${i}">
                 <div class="rank-entry-header" onclick="toggleEntry(${i})">
                     <span class="arrow">▶</span>
                     <div class="rank-num">${d.rank}</div>
-                    <div class="rank-title-preview">${d.chineseName || d.songName || '未填写标题...'}</div>
-                    <span class="rank-status ${d.videoFile ? '' : 'pending'}">${d.videoFile ? '✅ 已选视频' : '⏳ 待选视频'}</span>
+                    <div class="rank-title-preview">${d.chineseName||d.songName||'未填写标题...'}</div>
+                    <span class="rank-status ${d.videoFile?'':'pending'}">${d.videoFile?'✅ 已选视频':'⏳ 待选视频'}</span>
                 </div>
                 <div class="rank-entry-body">
                     <div class="form-grid">
@@ -1085,76 +999,45 @@
                             <label>🎬 选择高潮视频片段：</label>
                             <div class="file-input-wrap">
                                 <input type="file" accept="video/mp4,video/webm" onchange="handleVideoSelect(${i}, this)">
-                                <span class="file-name" id="fname-${i}">${d.videoFile ? d.videoFile.name : '未选择'}</span>
+                                <span class="file-name" id="fname-${i}">${d.videoFile?d.videoFile.name:'未选择'}</span>
                             </div>
-                            <button onclick="openVideoTrimModal(${i})" style="margin-top: 8px; padding: 6px 12px; background: #3498db; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" ${d.videoFile ? '' : 'disabled'}>✂️ 裁剪片段</button>
+                            <button onclick="openVideoTrimModal(${i})" style="margin-top:8px;padding:6px 12px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;" ${d.videoFile?'':'disabled'}>✂️ 裁剪片段</button>
                         </div>
                         <div class="form-group-sm full-width">
                             <label>🏷️ 标题上方文字（可选，半透明，不跟随转场）：</label>
-                            <input type="text" placeholder="如：本周特别推荐、VOCALOID精选..." value="${d.overlayText}" oninput="updateField(${i}, 'overlayText', this.value)">
+                            <input type="text" placeholder="如：本周特别推荐..." value="${d.overlayText||''}" oninput="updateField(${i},'overlayText',this.value)">
                         </div>
                         <div class="form-group-sm full-width">
                             <label>🎬 视频淡出转场类型：</label>
-                            <select onchange="updateField(${i}, 'fadeOutType', this.value)">
-                                <option value="1" ${d.fadeOutType === '1' || d.fadeOutType === undefined ? 'selected' : ''}>类型1：UI/数字/作品信息0.3秒淡出，视频和音频0.5秒淡出</option>
-                                <option value="2" ${d.fadeOutType === '2' ? 'selected' : ''}>类型2：UI/数字/作品信息瞬间消失，视频和音频硬切</option>
-                                <option value="3" ${d.fadeOutType === '3' ? 'selected' : ''}>类型3：UI/数字/作品信息0.1秒淡出，视频向上移动，音频继续播放</option>
+                            <select onchange="updateField(${i},'fadeOutType',this.value)">
+                                ${FADE_OUT_TYPES.map(t => `<option value="${t.value}"${d.fadeOutType===t.value?' selected':''}>${t.label}</option>`).join('')}
                             </select>
                         </div>
                         <div class="form-group-sm">
                             <label>排名变化类型：</label>
-                            <select onchange="updateField(${i}, 'changeType', this.value)">
-                                ${CHANGE_TYPES.map(t => `<option value="${t.value}"${d.changeType === t.value ? ' selected' : ''}>${t.label}</option>`).join('')}
+                            <select onchange="updateField(${i},'changeType',this.value)">
+                                ${CHANGE_TYPES.map(t => `<option value="${t.value}"${d.changeType===t.value?' selected':''}>${t.label}</option>`).join('')}
                             </select>
                         </div>
-                        <div class="form-group-sm">
-                            <label>歌名（日文/原名）：</label>
-                            <input type="text" placeholder="如：急性恋愛中毒" value="${d.songName}" oninput="updateField(${i}, 'songName', this.value)">
-                        </div>
-                        <div class="form-group-sm">
-                            <label>中文名：</label>
-                            <input type="text" placeholder="如：急性恋爱中毒" value="${d.chineseName}" oninput="updateField(${i}, 'chineseName', this.value)">
-                        </div>
-                        <div class="form-group-sm">
-                            <label>P主：</label>
-                            <input type="text" placeholder="如：ぴーなた" value="${d.producer}" oninput="updateField(${i}, 'producer', this.value)">
-                        </div>
-                        <div class="form-group-sm">
-                            <label>演唱歌姬：</label>
-                            <input type="text" placeholder="如：重音テト" value="${d.vocalist}" oninput="updateField(${i}, 'vocalist', this.value)">
-                        </div>
-                        <div class="form-group-sm">
-                            <label>上周排名：</label>
-                            <input type="number" placeholder="如：20" value="${d.lastWeekRank}" oninput="updateField(${i}, 'lastWeekRank', this.value)">
-                        </div>
-                        <div class="form-group-sm">
-                            <label>在榜周数：</label>
-                            <input type="number" placeholder="如：1" value="${d.weeksOnChart}" oninput="updateField(${i}, 'weeksOnChart', this.value)">
-                        </div>
-                        <div class="form-group-sm">
-                            <label>最高排名：</label>
-                            <input type="number" placeholder="如：20" value="${d.highestRank}" oninput="updateField(${i}, 'highestRank', this.value)">
-                        </div>
-                        <div class="form-group-sm">
-                            <label>RATE（如 ↑10%、↓5%、New）：</label>
-                            <input type="text" placeholder="如：↑10%" value="${d.rate}" oninput="updateField(${i}, 'rate', this.value)">
-                        </div>
-                        <div class="form-group-sm">
-                            <label>总分（自动补零到8位）：</label>
-                            <input type="number" placeholder="如：95" value="${d.totalScore}" oninput="updateField(${i}, 'totalScore', this.value)" min="0">
-                        </div>
+                        <div class="form-group-sm"><label>歌名（日文/原名）：</label><input type="text" placeholder="如：急性恋愛中毒" value="${d.songName}" oninput="updateField(${i},'songName',this.value)"></div>
+                        <div class="form-group-sm"><label>中文名：</label><input type="text" placeholder="如：急性恋爱中毒" value="${d.chineseName}" oninput="updateField(${i},'chineseName',this.value)"></div>
+                        <div class="form-group-sm"><label>P主：</label><input type="text" placeholder="如：ぴーなた" value="${d.producer}" oninput="updateField(${i},'producer',this.value)"></div>
+                        <div class="form-group-sm"><label>演唱歌姬：</label><input type="text" placeholder="如：重音テト" value="${d.vocalist}" oninput="updateField(${i},'vocalist',this.value)"></div>
+                        <div class="form-group-sm"><label>上周排名：</label><input type="number" placeholder="如：20" value="${d.lastWeekRank}" oninput="updateField(${i},'lastWeekRank',this.value)"></div>
+                        <div class="form-group-sm"><label>在榜周数：</label><input type="number" placeholder="如：1" value="${d.weeksOnChart}" oninput="updateField(${i},'weeksOnChart',this.value)"></div>
+                        <div class="form-group-sm"><label>最高排名：</label><input type="number" placeholder="如：20" value="${d.highestRank}" oninput="updateField(${i},'highestRank',this.value)"></div>
+                        <div class="form-group-sm"><label>RATE（如 ↑10%、↓5%、New）：</label><input type="text" placeholder="如：↑10%" value="${d.rate}" oninput="updateField(${i},'rate',this.value)"></div>
+                        <div class="form-group-sm"><label>总分（自动补零到8位）：</label><input type="number" placeholder="如：95" value="${d.totalScore}" oninput="updateField(${i},'totalScore',this.value)" min="0"></div>
                     </div>
                 </div>
             </div>
         `).join('');
     }
 
-    let currentPreviewRank = 0;
-
     function toggleEntry(index) {
-        document.querySelectorAll('.rank-entry').forEach(el => el.classList.remove('expanded', 'active'));
+        document.querySelectorAll('.rank-entry').forEach(el => el.classList.remove('expanded','active'));
         const entry = document.getElementById(`entry-${index}`);
-        entry.classList.add('expanded', 'active');
+        entry.classList.add('expanded','active');
         drawPreview(index);
     }
 
@@ -1178,51 +1061,47 @@
         status.classList.remove('pending');
         const trimBtn = document.querySelector(`#entry-${index} button[onclick*="openVideoTrimModal"]`);
         if (trimBtn) trimBtn.disabled = false;
-        showToast(`第${index + 1}名视频已选择，请裁剪片段`, 'success');
+        showToast(`第${index+1}名视频已选择，请裁剪片段`, 'success');
         if (index === currentPreviewRank) drawPreview(index);
         setTimeout(() => openVideoTrimModal(index), 300);
     }
-
-    // ==================== 绘制函数 ====================
+            // ============================================================
+    // 绘制函数（含入场动画）
+    // ============================================================
     function drawScoreBg(ctx, W, H, d) {
         const bg = assets.scoreBg;
         if (!bg) return;
-        
         const imgW = bg.naturalWidth || 300;
         const imgH = bg.naturalHeight || 100;
-        
         const x = W - imgW;
         const y = 0;
-        
         safeDrawImage(ctx, bg, x, y, imgW, imgH);
-        
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 30px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        var rateText = d.rate || '';
-        ctx.fillText('Rate: ' + rateText, x + imgW * 0.05, y + imgH / 2);
-        
-        var score = d.totalScore || '0';
-        var paddedScore = String(score).padStart(8, '0');
+        ctx.fillText('Rate: ' + (d.rate || ''), x + 20, imgH / 2);
+        const score = String(d.totalScore || '0').padStart(8, '0');
         ctx.font = 'bold 60px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(paddedScore, x + imgW - 20, y + imgH / 2);
+        ctx.fillText(score, x + imgW - 20, imgH / 2);
     }
-            // ===== 核心修改：UI分阶段转场，标题文字不跟随转场 =====
-    function drawUI(ctx, d, W, H, uiAlpha, elapsed) {
+
+    function drawUI(ctx, d, W, H, elapsed) {
+        // 入场时间参数
         const UI_FADE = 0.3;
         const RANK_FADE = 0.3;
-        const RANK_SCALE = 0.3;
         const SYMBOL_ROTATE = 0.3;
         const INFO_SLIDE = 0.2;
-        const NUM_FADE = 0.3;
-        const NUM_SCALE = 0.1;
+        const NUM_FADE = 0.1;
+
+        // === 所有元素同时开始 ===
+        const t = Math.min(elapsed, UI_FADE);
+        const uiAlpha = t / UI_FADE;
 
         ctx.globalAlpha = uiAlpha;
 
-        // 排名底图
+        // --- 排名底图 ---
         if (assets.rankCircle) {
             safeDrawImage(ctx, assets.rankCircle, 60, H - 280, 200, 200);
         } else {
@@ -1235,165 +1114,103 @@
             ctx.stroke();
         }
 
-        // 大排名数字（50%淡入->放大到100%）
-        var rank = parseInt(d.rank);
-        var rankScale = 1;
-        var rankAlpha = 1;
-        if (elapsed < RANK_FADE) {
-            rankAlpha = elapsed / RANK_FADE;
-            rankScale = 0.5;
-        } else if (elapsed < RANK_FADE + RANK_SCALE) {
-            rankAlpha = 1;
-            rankScale = 0.5 + 0.5 * ((elapsed - RANK_FADE) / RANK_SCALE);
-        }
-        var fontSize = (rank <= 10 ? 130 : 100) * rankScale;
+        // --- 大排名数字：50% → 100% 放大 ---
+        const rank = parseInt(d.rank);
+        const baseSize = rank <= 10 ? 130 : 100;
+        let rankScale = 0.5 + 0.5 * Math.min(elapsed / RANK_FADE, 1);
         ctx.fillStyle = '#56ab2f';
-        ctx.font = 'bold ' + fontSize + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+        ctx.font = 'bold ' + (baseSize * rankScale) + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.globalAlpha = uiAlpha * rankAlpha;
         ctx.fillText(String(d.rank), 160, H - 180);
 
-        // 变化符号（倒立→逆时针旋转20度→转回原位）
+        // --- 变化符号：倒立 → 偏左20° → 回正 ---
         const changeImg = getChangeImage(d.changeType);
+        const changeLabels = { new: 'NEW', up: '↑', down: '↓', flat: '—', re: 'RE' };
+        let rotation = 0;
+        if (elapsed < SYMBOL_ROTATE) {
+            const p = elapsed / SYMBOL_ROTATE;
+            // 倒立（180°）→ 逆时针偏左20° → 回正
+            if (p < 0.5) {
+                rotation = Math.PI - 20 * Math.PI / 180 * (1 - p / 0.5);
+            } else {
+                rotation = -20 * Math.PI / 180 * (1 - (p - 0.5) / 0.5);
+            }
+        }
+        ctx.save();
+        ctx.translate(260, H - 50);
+        ctx.rotate(rotation);
         if (changeImg) {
-            const size = 120;
-            let rotation = 0;
-            if (elapsed < UI_FADE) {
-                rotation = Math.PI;
-            } else if (elapsed < UI_FADE + SYMBOL_ROTATE) {
-                const t = (elapsed - UI_FADE) / SYMBOL_ROTATE;
-                if (t < 0.3) {
-                    rotation = Math.PI - (Math.PI + 20 * Math.PI / 180) * (t / 0.3);
-                } else {
-                    rotation = -20 * Math.PI / 180 * (1 - (t - 0.3) / 0.7);
-                }
-            } else {
-                rotation = 0;
-            }
-            ctx.save();
-            ctx.translate(260, H - 80);
-            ctx.rotate(rotation);
-            ctx.globalAlpha = uiAlpha * (elapsed < UI_FADE ? elapsed / UI_FADE : 1);
-            ctx.drawImage(changeImg, -size / 2, -size / 2, size, size);
-            ctx.restore();
+            ctx.drawImage(changeImg, -60, -60, 120, 120);
         } else {
-            const changeLabels = { new: 'NEW', up: '↑', down: '↓', flat: '—', re: 'RE' };
-            let rotation = 0;
-            if (elapsed < UI_FADE) {
-                rotation = Math.PI;
-            } else if (elapsed < UI_FADE + SYMBOL_ROTATE) {
-                const t = (elapsed - UI_FADE) / SYMBOL_ROTATE;
-                if (t < 0.3) {
-                    rotation = Math.PI - (Math.PI + 20 * Math.PI / 180) * (t / 0.3);
-                } else {
-                    rotation = -20 * Math.PI / 180 * (1 - (t - 0.3) / 0.7);
-                }
-            } else {
-                rotation = 0;
-            }
-            ctx.save();
-            ctx.translate(260, H - 50);
-            ctx.rotate(rotation);
-            ctx.globalAlpha = uiAlpha * (elapsed < UI_FADE ? elapsed / UI_FADE : 1);
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 40px Microsoft YaHei';
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             ctx.fillText(changeLabels[d.changeType] || '', 0, 0);
+        }
+        ctx.restore();
+
+        // --- 作品信息：左侧50px，40% → 100% ---
+        let infoSlide = 0;
+        let infoScale = 1;
+        if (elapsed < INFO_SLIDE) {
+            const p = elapsed / INFO_SLIDE;
+            infoSlide = -50 * (1 - p);
+            infoScale = 0.4 + 0.6 * p;
+        }
+        ctx.save();
+        ctx.translate(infoSlide, 0);
+        ctx.scale(infoScale, infoScale);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 52px Microsoft YaHei';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        const displayName = d.chineseName || d.songName || '';
+        ctx.fillText(displayName, 300, H - 210);
+        ctx.font = '32px Microsoft YaHei';
+        ctx.fillStyle = '#ccc';
+        const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
+        ctx.fillText(artistLine || '', 300, H - 160);
+        ctx.restore();
+
+        // --- RATE背景图：同作品信息 ---
+        const bg = assets.scoreBg;
+        if (bg) {
+            const bgW = bg.naturalWidth || 300;
+            const bgH = bg.naturalHeight || 100;
+            const bgX = W - bgW;
+            const bgY = 0;
+            ctx.save();
+            ctx.translate(infoSlide, 0);
+            ctx.scale(infoScale, infoScale);
+            safeDrawImage(ctx, bg, bgX, bgY, bgW, bgH);
             ctx.restore();
         }
 
-        // 作品信息（从正常位置左侧50px，40%大小->平移到原位并放大到100%）
-let infoOffsetX = 0;
-let infoScale = 1;
-let infoAlpha = 1;
-if (elapsed < INFO_SLIDE) {
-    const t = elapsed / INFO_SLIDE;
-    infoOffsetX = -50 * (1 - t);
-    infoScale = 0.4 + 0.6 * t;
-    infoAlpha = t;
-}
-ctx.save();
-ctx.translate(300 + infoOffsetX, H - 200);  // 基于正常位置x=300做偏移
-ctx.scale(infoScale, infoScale);
-ctx.globalAlpha = uiAlpha * infoAlpha;
-ctx.fillStyle = '#fff';
-ctx.font = 'bold 52px Microsoft YaHei';
-ctx.textAlign = 'left';
-const displayName = d.chineseName || d.songName || '';
-ctx.fillText(displayName, 0, 0);  // 在(0,0)绘制，因为translate已定位
-ctx.font = '32px Microsoft YaHei';
-ctx.fillStyle = '#ccc';
-const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
-ctx.fillText(artistLine || '', 0, 50);  // 歌姬在歌名下方50px
-ctx.restore();
-        // RATE背景图（半透明，从正常位置左侧50px平移）
-if (assets.scoreBg) {
-    const bgW = assets.scoreBg.naturalWidth || 300;
-    const bgH = assets.scoreBg.naturalHeight || 100;
-    let bgOffsetX = 0;
-    let bgScale = 1;
-    let bgAlpha = 0.5;
-    if (elapsed < INFO_SLIDE) {
-        const t = elapsed / INFO_SLIDE;
-        bgOffsetX = -50 * (1 - t);
-        bgScale = 0.4 + 0.6 * t;
-        bgAlpha = 0.5 * t;
-    }
-    ctx.save();
-    ctx.translate(W - bgW + bgOffsetX, 0);  // 基于正常位置x=W-bgW做偏移
-    ctx.scale(bgScale, bgScale);
-    ctx.globalAlpha = bgAlpha;
-    safeDrawImage(ctx, assets.scoreBg, 0, 0, bgW, bgH);
-    ctx.restore();
-}
-        
-
-        // RATE和总分文字
-        let textAlpha = 1;
-        if (elapsed < UI_FADE) {
-            textAlpha = elapsed / UI_FADE;
-        }
-        ctx.globalAlpha = uiAlpha * textAlpha;
+        // --- RATE/总分文字：淡入 ---
+        ctx.globalAlpha = uiAlpha;
+        const bgW2 = assets.scoreBg?.naturalWidth || 300;
+        const bgH2 = assets.scoreBg?.naturalHeight || 100;
+        const bgX2 = W - bgW2;
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 30px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        var rateText = d.rate || '';
-        ctx.fillText('Rate: ' + rateText, W - (assets.scoreBg?.naturalWidth || 300) + 40, 60);
-        var score = d.totalScore || '0';
-        var paddedScore = String(score).padStart(8, '0');
+        ctx.fillText('Rate: ' + (d.rate || ''), bgX2 + 20, bgH2 / 2);
+        const score2 = String(d.totalScore || '0').padStart(8, '0');
         ctx.font = 'bold 60px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText(paddedScore, W - 20, 60);
+        ctx.fillText(score2, bgX2 + bgW2 - 20, bgH2 / 2);
 
-        // 历史数据（先绘制底图，再绘制数字，确保数字在底图上面）
-        if (assets.historyBottom) {
-            safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
-        } else {
-            ctx.fillStyle = 'rgba(26, 37, 47, 0.8)';
-            ctx.fillRect(W - 520, H - 170, 460, 120);
-        }
-
+        // --- 历史排名数字：80% → 100%，同时开始，0.1秒完成 ---
         const historyData = [d.lastWeekRank || '-', d.weeksOnChart || '-', d.highestRank || '-'];
-        const historyLabels = ['上周排名', '在榜周数', '最高排名'];
         const historyX = [W - 430, W - 290, W - 150];
+        const historyLabels = ['上周排名', '在榜周数', '最高排名'];
+        const numAlpha = Math.min(elapsed / NUM_FADE, 1);
+        const numScale = 0.8 + 0.2 * Math.min(elapsed / NUM_FADE, 1);
 
         historyData.forEach((v, i) => {
-            let numScale = 1;
-            let numAlpha = 1;
-            const startTime = UI_FADE + i * (NUM_FADE + NUM_SCALE);
-            const endTime = startTime + NUM_FADE + NUM_SCALE;
-            if (elapsed < startTime) {
-                numAlpha = 0;
-                numScale = 0.6;
-            } else if (elapsed < startTime + NUM_FADE) {
-                numAlpha = (elapsed - startTime) / NUM_FADE;
-                numScale = 0.6;
-            } else if (elapsed < endTime) {
-                numAlpha = 1;
-                numScale = 0.6 + 0.4 * ((elapsed - startTime - NUM_FADE) / NUM_SCALE);
-            }
             ctx.globalAlpha = uiAlpha * numAlpha;
             ctx.fillStyle = '#56ab2f';
             ctx.font = 'bold ' + (64 * numScale) + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
@@ -1402,82 +1219,25 @@ if (assets.scoreBg) {
             ctx.fillText(v, historyX[i], H - 115);
             ctx.fillStyle = '#fff';
             ctx.font = '18px Microsoft YaHei';
-            ctx.globalAlpha = uiAlpha * numAlpha;
             ctx.fillText(historyLabels[i], historyX[i], H - 38);
         });
 
-        // 历史顶图
+        // --- 历史顶图/底图 ---
+        ctx.globalAlpha = uiAlpha;
         if (assets.historyTop) {
             safeDrawImage(ctx, assets.historyTop, W - 520, H - 55, 460, 35);
         } else {
-            ctx.fillStyle = 'rgba(26, 37, 47, 0.6)';
+            ctx.fillStyle = 'rgba(26,37,47,0.6)';
             ctx.fillRect(W - 520, H - 55, 460, 35);
         }
+        if (assets.historyBottom) {
+            safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
+        } else {
+            ctx.fillStyle = 'rgba(26,37,47,0.8)';
+            ctx.fillRect(W - 520, H - 170, 460, 120);
+        }
 
-        ctx.globalAlpha = 1;
-        ctx.textBaseline = 'alphabetic';
-    }
-
-    function drawFrame(ctx, video, d, uiAlpha, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, elapsed, isFadingOut, fadeOutType, videoOffsetY, nextVideoFrame) {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, W, H);
-        
-        // 类型3：视频向上移动，画面下方显示下一个视频第一帧
-        if (isFadingOut && fadeOutType === '3') {
-            if (video && videoAlpha > 0) {
-                ctx.globalAlpha = 1;
-                try {
-                    ctx.drawImage(video, offsetX, offsetY + videoOffsetY, scaledW, scaledH);
-                } catch (e) {}
-            }
-            if (nextVideoFrame) {
-                ctx.globalAlpha = 1;
-                try {
-                    ctx.drawImage(nextVideoFrame, 0, 0, W, H);
-                } catch (e) {}
-            }
-            ctx.globalAlpha = 1;
-            return;
-        }
-        
-        // 类型2：瞬间硬切，UI瞬间消失
-        if (isFadingOut && fadeOutType === '2') {
-            ctx.globalAlpha = 1;
-            try {
-                ctx.drawImage(video, offsetX, offsetY, scaledW, scaledH);
-            } catch (e) {
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, W, H);
-            }
-            return;
-        }
-        
-        // 类型1：正常淡出
-        if (isFadingOut && fadeOutType === '1') {
-            ctx.globalAlpha = videoAlpha;
-            try {
-                ctx.drawImage(video, offsetX, offsetY, scaledW, scaledH);
-            } catch (e) {
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, W, H);
-            }
-            if (uiAlpha > 0) {
-                drawUI(ctx, d, W, H, uiAlpha, elapsed);
-            }
-            ctx.globalAlpha = 1;
-            return;
-        }
-        
-        // 正常播放
-        ctx.globalAlpha = videoAlpha;
-        try {
-            ctx.drawImage(video, offsetX, offsetY, scaledW, scaledH);
-        } catch (e) {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, W, H);
-        }
-        
-        // 标题上方文字
+        // --- 不跟随转场的标题文字 ---
         if (d.overlayText) {
             ctx.save();
             ctx.globalAlpha = 0.5;
@@ -1485,20 +1245,65 @@ if (assets.scoreBg) {
             ctx.font = 'bold 48px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
             ctx.shadowBlur = 10;
             ctx.shadowOffsetY = 4;
             ctx.fillText(d.overlayText, W / 2, 120);
             ctx.restore();
         }
-        
-        // UI绘制
-        drawUI(ctx, d, W, H, uiAlpha, elapsed);
+
         ctx.globalAlpha = 1;
         ctx.textBaseline = 'alphabetic';
     }
 
-    // ==================== 音频混音器 ====================
+    function drawPreview(rankIndex) {
+        const canvas = document.getElementById('preview-canvas');
+        const ctx = canvas.getContext('2d');
+        const d = rankData[rankIndex];
+        const W = 1920, H = 1080;
+        currentPreviewRank = rankIndex;
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, W, H);
+        drawUI(ctx, d, W, H, 0.6);
+        if (d.videoFile) {
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(100, 100, W-200, H-400);
+            ctx.fillStyle = '#666';
+            ctx.font = '30px Microsoft YaHei';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎬 视频已选择', W/2, H/2-50);
+            ctx.font = '20px Microsoft YaHei';
+            ctx.fillStyle = '#888';
+            ctx.fillText('点击"开始生成"查看最终效果', W/2, H/2+30);
+        }
+        document.getElementById('canvas-placeholder').style.display = 'none';
+    }
+
+    function drawSinglePreview(rankIndex) {
+        const canvas = document.getElementById('single-preview-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const d = rankData[rankIndex];
+        const W = 1920, H = 1080;
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, W, H);
+        drawUI(ctx, d, W, H, 0.6);
+        if (d.videoFile) {
+            ctx.fillStyle = 'rgba(255,255,255,0.05)';
+            ctx.fillRect(100, 100, W-200, H-400);
+            ctx.fillStyle = '#666';
+            ctx.font = '30px Microsoft YaHei';
+            ctx.textAlign = 'center';
+            ctx.fillText('🎬 视频已选择', W/2, H/2-50);
+            ctx.font = '20px Microsoft YaHei';
+            ctx.fillStyle = '#888';
+            ctx.fillText('点击"开始生成"查看最终效果', W/2, H/2+30);
+        }
+        document.getElementById('single-canvas-placeholder').style.display = 'none';
+    }
+            // ============================================================
+    // 转场 + 录制核心
+    // ============================================================
     let audioContext = null;
     let currentAudioNode = null;
     let audioDestination = null;
@@ -1507,7 +1312,6 @@ if (assets.scoreBg) {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             audioDestination = audioContext.createMediaStreamDestination();
-            console.log('🎵 AudioContext 已初始化');
         }
         return audioDestination;
     }
@@ -1515,24 +1319,33 @@ if (assets.scoreBg) {
     function connectVideoAudio(video) {
         if (!audioContext) return null;
         if (currentAudioNode) {
-            try {
-                currentAudioNode.disconnect();
-            } catch (e) {}
+            try { currentAudioNode.disconnect(); } catch(e) {}
             currentAudioNode = null;
         }
         try {
             const source = audioContext.createMediaElementSource(video);
             source.connect(audioDestination);
             currentAudioNode = source;
-            console.log('🎵 音频已连接到混音器');
             return source;
-        } catch (e) {
+        } catch(e) {
             console.warn('⚠️ 音频连接失败:', e);
             return null;
         }
     }
 
-    // ==================== 批量视频生成 ====================
+    function sleepFrame() {
+        return new Promise(r => requestAnimationFrame(r));
+    }
+
+    function updateProgress(wrap, text, percent) {
+        document.getElementById('progress-text').textContent = text;
+        document.getElementById('progress-percent').textContent = percent + '%';
+        document.getElementById('progress-fill').style.width = percent + '%';
+    }
+
+    // ============================================================
+    // 批量生成
+    // ============================================================
     async function startVideoGeneration() {
         const missing = rankData.filter(d => !d.videoFile);
         if (missing.length > 0) {
@@ -1547,7 +1360,7 @@ if (assets.scoreBg) {
         try {
             await generateVideo(progressWrap);
             showToast('✅ 视频生成完成！', 'success');
-        } catch (err) {
+        } catch(err) {
             console.error(err);
             showToast('❌ 生成失败：' + err.message, 'error');
         } finally {
@@ -1565,48 +1378,31 @@ if (assets.scoreBg) {
         const canvas = document.getElementById('preview-canvas');
         const ctx = canvas.getContext('2d');
         const W = 1920, H = 1080;
-        const VIDEO_FADE_DURATION = 0.5;
-        
-        try {
-            await document.fonts.load('bold 130px BiaoXiaoZhi');
-            await document.fonts.load('bold 64px BiaoXiaoZhi');
-            await document.fonts.load('bold 42px BiaoXiaoZhi');
-            await document.fonts.load('bold 84px BiaoXiaoZhi');
-            await document.fonts.ready;
-            console.log('✅ 字体已就绪');
-        } catch (e) {
-            console.warn('⚠️ 字体加载失败:', e);
-        }
-        
+        const FADE_DURATION = 0.5;
+        const UI_FADE_DURATION = 0.3;
+
+        await document.fonts.ready;
         const audioDest = initAudioMixer();
+
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, W, H);
-        
+
         const canvasStream = canvas.captureStream(30);
         const audioTracks = audioDest.stream.getAudioTracks();
         const combinedStream = new MediaStream();
         canvasStream.getVideoTracks().forEach(t => combinedStream.addTrack(t));
         audioTracks.forEach(t => combinedStream.addTrack(t));
-        
+
         let mimeType = 'video/webm;codecs=vp9';
         if (!MediaRecorder.isTypeSupported(mimeType)) {
             mimeType = 'video/webm;codecs=vp8';
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-                mimeType = 'video/webm';
-            }
+            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
         }
-        console.log('📹 使用 MIME:', mimeType);
-        
-        const recorder = new MediaRecorder(combinedStream, { mimeType: mimeType, videoBitsPerSecond: 5000000 });
+
+        const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 8000000 });
         const chunks = [];
         let recorderError = null;
-        
-        recorder.ondataavailable = e => {
-            if (e.data && e.data.size > 0) {
-                chunks.push(e.data);
-            }
-        };
-        
+        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
         const recordingComplete = new Promise((resolve, reject) => {
             recorder.onstop = () => {
                 if (recorderError) { reject(recorderError); return; }
@@ -1617,19 +1413,16 @@ if (assets.scoreBg) {
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = `ranking_${new Date().toISOString().slice(0,10)}.webm`;
-                    document.body.appendChild(a);
                     a.click();
-                    document.body.removeChild(a);
                     setTimeout(() => URL.revokeObjectURL(url), 5000);
                     resolve();
-                } catch (e) { reject(e); }
+                } catch(e) { reject(e); }
             };
-            recorder.onerror = (e) => { recorderError = e; };
+            recorder.onerror = e => { recorderError = e; };
         });
-        
-        console.log('🎬 开始录制...');
+
         recorder.start(1000);
-        
+
         // 预加载全部视频
         const videos = [];
         for (let i = TOTAL_RANKS - 1; i >= 0; i--) {
@@ -1640,17 +1433,31 @@ if (assets.scoreBg) {
             v.playsInline = true;
             v.crossOrigin = 'anonymous';
             await new Promise(r => { v.onloadedmetadata = r; });
-            videos.push({ video: v, data: d, index: i });
+            // 预截取第一帧
+            v.currentTime = 0;
+            await new Promise(r => { v.onseeked = r; });
+            const frameCanvas = document.createElement('canvas');
+            frameCanvas.width = W;
+            frameCanvas.height = H;
+            const fctx = frameCanvas.getContext('2d');
+            const vw = v.videoWidth || 1920;
+            const vh = v.videoHeight || 1080;
+            const s = Math.min(W/vw, H/vh);
+            fctx.drawImage(v, (W - vw*s)/2, (H - vh*s)/2, vw*s, vh*s);
+            const firstFrame = new Image();
+            firstFrame.src = frameCanvas.toDataURL('image/png');
+            await new Promise(r => { firstFrame.onload = r; });
+            videos.push({ video: v, data: d, index: i, firstFrame: firstFrame });
         }
-        
+
         // 逐个播放
         for (let vIdx = 0; vIdx < videos.length; vIdx++) {
-            const { video, data: d, index: i } = videos[vIdx];
+            const { video, data: d, firstFrame } = videos[vIdx];
             const processedCount = videos.length - vIdx;
             const startTime = d.startTime || 0;
             const endTime = d.endTime > 0 ? d.endTime : video.duration;
             const duration = Math.max(endTime - startTime, 0.5);
-            console.log(`🎯 第 ${d.rank} 名 (${processedCount}/${TOTAL_RANKS})`);
+
             connectVideoAudio(video);
             if (startTime > 0) {
                 video.currentTime = startTime;
@@ -1660,66 +1467,122 @@ if (assets.scoreBg) {
             if (audioContext && audioContext.state === 'suspended') {
                 await audioContext.resume();
             }
+
             const playStart = performance.now();
             const totalDuration = duration * 1000;
-            const fadeMs = VIDEO_FADE_DURATION * 1000;
-            const videoW = video.videoWidth || 1920;
-            const videoH = video.videoHeight || 1080;
-            const scale = Math.min(W / videoW, H / videoH);
-            const scaledW = videoW * scale;
-            const scaledH = videoH * scale;
-            const offsetX = (W - scaledW) / 2;
-            const offsetY = (H - scaledH) / 2;
+            const fadeMs = FADE_DURATION * 1000;
+            const uiFadeMs = UI_FADE_DURATION * 1000;
+
+            const vw = video.videoWidth || 1920;
+            const vh = video.videoHeight || 1080;
+            const scale = Math.min(W/vw, H/vh);
+            const sw = vw * scale;
+            const sh = vh * scale;
+            const ox = (W - sw) / 2;
+            const oy = (H - sh) / 2;
+
             let gainNode = null;
             if (currentAudioNode && audioContext) {
                 gainNode = audioContext.createGain();
                 currentAudioNode.connect(gainNode);
                 gainNode.connect(audioDestination);
             }
+
+            // 判断下一个视频是否存在（用于类型3）
+            const nextVideo = (vIdx < videos.length - 1) ? videos[vIdx + 1] : null;
+
             while (performance.now() - playStart < totalDuration) {
                 const elapsed = performance.now() - playStart;
                 const progress = elapsed / totalDuration;
+                const isFadingOut = elapsed > totalDuration - fadeMs;
+                const fadeOutType = d.fadeOutType || '1';
+
+                // 视频透明度
                 let videoAlpha = 1;
-                if (elapsed < fadeMs) {
-                    videoAlpha = elapsed / fadeMs;
-                } else if (elapsed > totalDuration - fadeMs) {
+                if (isFadingOut && fadeOutType === '1') {
                     videoAlpha = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
+                } else if (fadeOutType === '2') {
+                    videoAlpha = 1;
+                } else if (fadeOutType === '3') {
+                    videoAlpha = 1;
                 }
+
+                // 音频音量
                 if (gainNode) {
-                    if (elapsed < fadeMs) {
-                        gainNode.gain.value = elapsed / fadeMs;
-                    } else if (elapsed > totalDuration - fadeMs) {
+                    if (isFadingOut && fadeOutType === '1') {
                         gainNode.gain.value = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
+                    } else if (fadeOutType === '2') {
+                        gainNode.gain.value = 1;
+                    } else if (fadeOutType === '3') {
+                        gainNode.gain.value = 1;
                     } else {
                         gainNode.gain.value = 1;
                     }
                 }
-                drawFrame(ctx, video, d, 1, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, elapsed / 1000, false, null, 0, null);
+
+                // UI透明度（淡入用drawUI内部处理，淡出单独控制）
+                let uiAlpha = 1;
+                if (isFadingOut) {
+                    if (fadeOutType === '1') {
+                        uiAlpha = 1 - Math.min((elapsed - (totalDuration - fadeMs)) / uiFadeMs, 1);
+                    } else if (fadeOutType === '2') {
+                        uiAlpha = 0;
+                    } else if (fadeOutType === '3') {
+                        uiAlpha = 1 - Math.min((elapsed - (totalDuration - fadeMs)) / 100, 1);
+                    }
+                }
+
+                // ---- 绘制 ----
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+
+                if (fadeOutType === '3' && isFadingOut) {
+                    // 类型3：上滑换场
+                    const moveProgress = (elapsed - (totalDuration - fadeMs)) / fadeMs;
+                    const moveY = -moveProgress * H;
+                    // 当前视频上移
+                    ctx.globalAlpha = 1;
+                    ctx.drawImage(video, ox, oy + moveY, sw, sh);
+                    // 下一视频第一帧固定在下方
+                    if (nextVideo && nextVideo.firstFrame) {
+                        ctx.globalAlpha = 1;
+                        const revealY = (1 - moveProgress) * H;
+                        ctx.drawImage(nextVideo.firstFrame, 0, revealY, W, H);
+                    }
+                } else {
+                    // 类型1或2
+                    ctx.globalAlpha = videoAlpha;
+                    ctx.drawImage(video, ox, oy, sw, sh);
+                    // UI
+                    ctx.globalAlpha = uiAlpha;
+                    if (uiAlpha > 0.01) {
+                        drawUI(ctx, d, W, H, elapsed / 1000);
+                    }
+                }
+
+                // 进度
                 const overall = (vIdx + progress) / TOTAL_RANKS * 100;
                 document.getElementById('progress-text').textContent = `第 ${d.rank} 名 (${processedCount}/${TOTAL_RANKS})...`;
                 document.getElementById('progress-percent').textContent = overall.toFixed(0) + '%';
                 document.getElementById('progress-fill').style.width = overall.toFixed(0) + '%';
+
                 await sleepFrame();
             }
+
             video.pause();
         }
-        
-        // 清理视频资源
+
         videos.forEach(({ video }) => {
             URL.revokeObjectURL(video.src);
             video.remove();
         });
-        
-        console.log('📝 所有片段处理完成，停止录制...');
+
         recorder.stop();
         await recordingComplete;
-        console.log('✅ 视频生成完成！');
     }
-
-    function sleepFrame() {
-        return new Promise(r => requestAnimationFrame(r));
-    }
-            // ==================== 单个视频生成 ====================
+            // ============================================================
+    // 单个视频生成
+    // ============================================================
     function updateSingleRankPreview() {
         const startRank = parseInt(document.getElementById('single-start-rank').value) || 1;
         const endRank = parseInt(document.getElementById('single-end-rank').value) || 5;
@@ -1731,30 +1594,20 @@ if (assets.scoreBg) {
         }
         const count = validEnd - validStart + 1;
         document.getElementById('single-rank-count').value = `${count} 个排名`;
+
         const previewContainer = document.getElementById('single-rank-preview');
         const ranks = rankData.slice(validStart - 1, validEnd);
         previewContainer.innerHTML = ranks.map((d, i) => {
             const actualRank = validStart + i;
-            const hasVideo = d.videoFile ? '✅' : '⏳';
             const name = d.chineseName || d.songName || '未填写';
-            return `
-                <div style="display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;" onclick="drawSinglePreview(${actualRank - 1})">
-                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #a8e063, #56ab2f); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px;">
-                        ${actualRank}
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-size: 0.9rem; color: var(--dark);">${name}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-sub);">${d.producer || ''} ${d.vocalist ? '- ' + d.vocalist : ''}</div>
-                    </div>
-                    <div style="font-size: 0.8rem; color: ${d.videoFile ? '#27ae60' : '#e67e22'};">
-                        ${hasVideo} ${d.videoFile ? '已选视频' : '待选视频'}
-                    </div>
-                </div>
-            `;
+            return `<div style="display:flex;align-items:center;padding:10px;border-bottom:1px solid #eee;cursor:pointer;" onclick="drawSinglePreview(${actualRank-1})">
+                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#a8e063,#56ab2f);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:12px;">${actualRank}</div>
+                <div style="flex:1;"><div style="font-size:.9rem;color:var(--dark);">${name}</div>
+                <div style="font-size:.75rem;color:var(--text-sub);">${d.producer||''}${d.vocalist?' - '+d.vocalist:''}</div></div>
+                <div style="font-size:.8rem;color:${d.videoFile?'#27ae60':'#e67e22'};">${d.videoFile?'✅ 已选视频':'⏳ 待选视频'}</div>
+            </div>`;
         }).join('');
-        if (ranks.length > 0) {
-            drawSinglePreview(validStart - 1);
-        }
+        if (ranks.length > 0) drawSinglePreview(validStart - 1);
         renderSingleRankForms(validStart, validEnd);
     }
 
@@ -1763,88 +1616,56 @@ if (assets.scoreBg) {
         const ranks = rankData.slice(startRank - 1, endRank);
         container.innerHTML = ranks.map((d, i) => {
             const actualRank = startRank + i;
-            return `
-                <div class="rank-entry expanded" id="single-entry-${actualRank - 1}" style="margin-top: 20px;">
-                    <div class="rank-entry-header" onclick="toggleSingleEntry(${actualRank - 1})">
-                        <span class="arrow">▶</span>
-                        <div class="rank-num">${actualRank}</div>
-                        <div class="rank-title-preview">${d.chineseName || d.songName || '未填写标题...'}</div>
-                        <span class="rank-status ${d.videoFile ? '' : 'pending'}">${d.videoFile ? '✅ 已选视频' : '⏳ 待选视频'}</span>
-                    </div>
-                    <div class="rank-entry-body">
-                        <div class="form-grid">
-                            <div class="form-group-sm full-width">
-                                <label>🎬 选择高潮视频片段：</label>
-                                <div class="file-input-wrap">
-                                    <input type="file" accept="video/mp4,video/webm" onchange="handleSingleVideoSelect(${actualRank - 1}, this)">
-                                    <span class="file-name" id="single-fname-${actualRank - 1}">${d.videoFile ? d.videoFile.name : '未选择'}</span>
-                                </div>
-                                <button onclick="openVideoTrimModal(${actualRank - 1})" style="margin-top: 8px; padding: 6px 12px; background: #3498db; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem;" ${d.videoFile ? '' : 'disabled'}>✂️ 裁剪片段</button>
+            return `<div class="rank-entry expanded" id="single-entry-${actualRank-1}" style="margin-top:20px;">
+                <div class="rank-entry-header" onclick="toggleSingleEntry(${actualRank-1})">
+                    <span class="arrow">▶</span>
+                    <div class="rank-num">${actualRank}</div>
+                    <div class="rank-title-preview">${d.chineseName||d.songName||'未填写标题...'}</div>
+                    <span class="rank-status ${d.videoFile?'':'pending'}">${d.videoFile?'✅ 已选视频':'⏳ 待选视频'}</span>
+                </div>
+                <div class="rank-entry-body">
+                    <div class="form-grid">
+                        <div class="form-group-sm full-width">
+                            <label>🎬 选择高潮视频片段：</label>
+                            <div class="file-input-wrap">
+                                <input type="file" accept="video/mp4,video/webm" onchange="handleSingleVideoSelect(${actualRank-1}, this)">
+                                <span class="file-name" id="single-fname-${actualRank-1}">${d.videoFile?d.videoFile.name:'未选择'}</span>
                             </div>
-                            <div class="form-group-sm full-width">
-                                <label>🏷️ 标题上方文字（可选，半透明，不跟随转场）：</label>
-                                <input type="text" placeholder="如：本周特别推荐、VOCALOID精选..." value="${d.overlayText}" oninput="updateSingleField(${actualRank - 1}, 'overlayText', this.value)">
-                            </div>
-                            <div class="form-group-sm full-width">
-                                <label>🎬 视频淡出转场类型：</label>
-                                <select onchange="updateSingleField(${actualRank - 1}, 'fadeOutType', this.value)">
-                                    <option value="1" ${d.fadeOutType === '1' || d.fadeOutType === undefined ? 'selected' : ''}>类型1：UI/数字/作品信息0.3秒淡出，视频和音频0.5秒淡出</option>
-                                    <option value="2" ${d.fadeOutType === '2' ? 'selected' : ''}>类型2：UI/数字/作品信息瞬间消失，视频和音频硬切</option>
-                                    <option value="3" ${d.fadeOutType === '3' ? 'selected' : ''}>类型3：UI/数字/作品信息0.1秒淡出，视频向上移动，音频继续播放</option>
-                                </select>
-                            </div>
-                            <div class="form-group-sm">
-                                <label>排名变化类型：</label>
-                                <select onchange="updateSingleField(${actualRank - 1}, 'changeType', this.value)">
-                                    ${CHANGE_TYPES.map(t => `<option value="${t.value}"${d.changeType === t.value ? ' selected' : ''}>${t.label}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div class="form-group-sm">
-                                <label>歌名（日文/原名）：</label>
-                                <input type="text" placeholder="如：急性恋愛中毒" value="${d.songName}" oninput="updateSingleField(${actualRank - 1}, 'songName', this.value)">
-                            </div>
-                            <div class="form-group-sm">
-                                <label>中文名：</label>
-                                <input type="text" placeholder="如：急性恋爱中毒" value="${d.chineseName}" oninput="updateSingleField(${actualRank - 1}, 'chineseName', this.value)">
-                            </div>
-                            <div class="form-group-sm">
-                                <label>P 主：</label>
-                                <input type="text" placeholder="如：ぴーなた" value="${d.producer}" oninput="updateSingleField(${actualRank - 1}, 'producer', this.value)">
-                            </div>
-                            <div class="form-group-sm">
-                                <label>演唱歌姬：</label>
-                                <input type="text" placeholder="如：重音テト" value="${d.vocalist}" oninput="updateSingleField(${actualRank - 1}, 'vocalist', this.value)">
-                            </div>
-                            <div class="form-group-sm">
-                                <label>上周排名：</label>
-                                <input type="number" placeholder="如：20" value="${d.lastWeekRank}" oninput="updateSingleField(${actualRank - 1}, 'lastWeekRank', this.value)">
-                            </div>
-                            <div class="form-group-sm">
-                                <label>在榜周数：</label>
-                                <input type="number" placeholder="如：1" value="${d.weeksOnChart}" oninput="updateSingleField(${actualRank - 1}, 'weeksOnChart', this.value)">
-                            </div>
-                            <div class="form-group-sm">
-                                <label>最高排名：</label>
-                                <input type="number" placeholder="如：20" value="${d.highestRank}" oninput="updateSingleField(${actualRank - 1}, 'highestRank', this.value)">
-                            </div>
-                            <div class="form-group-sm">
-                                <label>RATE（如 ↑10%、↓5%、New）：</label>
-                                <input type="text" placeholder="如：↑10%" value="${d.rate}" oninput="updateSingleField(${actualRank - 1}, 'rate', this.value)">
-                            </div>
-                            <div class="form-group-sm">
-                                <label>总分（自动补零到8位）：</label>
-                                <input type="number" placeholder="如：95" value="${d.totalScore}" oninput="updateSingleField(${actualRank - 1}, 'totalScore', this.value)" min="0">
-                            </div>
+                            <button onclick="openVideoTrimModal(${actualRank-1})" style="margin-top:8px;padding:6px 12px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;" ${d.videoFile?'':'disabled'}>✂️ 裁剪片段</button>
                         </div>
+                        <div class="form-group-sm full-width">
+                            <label>🏷️ 标题上方文字（可选，半透明，不跟随转场）：</label>
+                            <input type="text" placeholder="如：本周特别推荐..." value="${d.overlayText||''}" oninput="updateSingleField(${actualRank-1},'overlayText',this.value)">
+                        </div>
+                        <div class="form-group-sm full-width">
+                            <label>🎬 视频淡出转场类型：</label>
+                            <select onchange="updateSingleField(${actualRank-1},'fadeOutType',this.value)">
+                                ${FADE_OUT_TYPES.map(t => `<option value="${t.value}"${d.fadeOutType===t.value?' selected':''}>${t.label}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group-sm">
+                            <label>排名变化类型：</label>
+                            <select onchange="updateSingleField(${actualRank-1},'changeType',this.value)">
+                                ${CHANGE_TYPES.map(t => `<option value="${t.value}"${d.changeType===t.value?' selected':''}>${t.label}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group-sm"><label>歌名（日文/原名）：</label><input type="text" placeholder="如：急性恋愛中毒" value="${d.songName}" oninput="updateSingleField(${actualRank-1},'songName',this.value)"></div>
+                        <div class="form-group-sm"><label>中文名：</label><input type="text" placeholder="如：急性恋爱中毒" value="${d.chineseName}" oninput="updateSingleField(${actualRank-1},'chineseName',this.value)"></div>
+                        <div class="form-group-sm"><label>P 主：</label><input type="text" placeholder="如：ぴーなた" value="${d.producer}" oninput="updateSingleField(${actualRank-1},'producer',this.value)"></div>
+                        <div class="form-group-sm"><label>演唱歌姬：</label><input type="text" placeholder="如：重音テト" value="${d.vocalist}" oninput="updateSingleField(${actualRank-1},'vocalist',this.value)"></div>
+                        <div class="form-group-sm"><label>上周排名：</label><input type="number" placeholder="如：20" value="${d.lastWeekRank}" oninput="updateSingleField(${actualRank-1},'lastWeekRank',this.value)"></div>
+                        <div class="form-group-sm"><label>在榜周数：</label><input type="number" placeholder="如：1" value="${d.weeksOnChart}" oninput="updateSingleField(${actualRank-1},'weeksOnChart',this.value)"></div>
+                        <div class="form-group-sm"><label>最高排名：</label><input type="number" placeholder="如：20" value="${d.highestRank}" oninput="updateSingleField(${actualRank-1},'highestRank',this.value)"></div>
+                        <div class="form-group-sm"><label>RATE（如 ↑10%、↓5%、New）：</label><input type="text" placeholder="如：↑10%" value="${d.rate}" oninput="updateSingleField(${actualRank-1},'rate',this.value)"></div>
+                        <div class="form-group-sm"><label>总分（自动补零到8位）：</label><input type="number" placeholder="如：95" value="${d.totalScore}" oninput="updateSingleField(${actualRank-1},'totalScore',this.value)" min="0"></div>
                     </div>
                 </div>
-            `;
+            </div>`;
         }).join('');
     }
 
     function toggleSingleEntry(index) {
-        const entry = document.getElementById(`single-entry-${index}`);
-        entry.classList.toggle('expanded');
+        document.getElementById(`single-entry-${index}`).classList.toggle('expanded');
     }
 
     function updateSingleField(index, field, value) {
@@ -1867,35 +1688,9 @@ if (assets.scoreBg) {
         status.classList.remove('pending');
         const trimBtn = document.querySelector(`#single-entry-${index} button[onclick*="openVideoTrimModal"]`);
         if (trimBtn) trimBtn.disabled = false;
-        showToast(`第${index + 1}名视频已选择，请裁剪片段`, 'success');
+        showToast(`第${index+1}名视频已选择，请裁剪片段`, 'success');
         drawSinglePreview(index);
         setTimeout(() => openVideoTrimModal(index), 300);
-    }
-
-    function drawSinglePreview(rankIndex) {
-        const canvas = document.getElementById('single-preview-canvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        const d = rankData[rankIndex];
-        const W = 1920, H = 1080;
-        ctx.fillStyle = '#1a1a2e';
-        ctx.fillRect(0, 0, W, H);
-        if (d.overlayText) {
-            ctx.save();
-            ctx.globalAlpha = 0.5;
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 48px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            ctx.shadowBlur = 10;
-            ctx.shadowOffsetY = 4;
-            ctx.fillText(d.overlayText, W / 2, 120);
-            ctx.restore();
-        }
-        drawUI(ctx, d, W, H, 1, 10);
-        const placeholder = document.getElementById('single-canvas-placeholder');
-        if (placeholder) placeholder.style.display = 'none';
     }
 
     async function startSingleVideoGeneration() {
@@ -1921,7 +1716,7 @@ if (assets.scoreBg) {
         try {
             await generateSingleVideo(validStart, validEnd, progressWrap);
             showToast(`✅ 第${validStart}-${validEnd}名视频生成完成！`, 'success');
-        } catch (err) {
+        } catch(err) {
             console.error(err);
             showToast('❌ 生成失败：' + err.message, 'error');
         } finally {
@@ -1939,42 +1734,31 @@ if (assets.scoreBg) {
         const canvas = document.getElementById('single-preview-canvas');
         const ctx = canvas.getContext('2d');
         const W = 1920, H = 1080;
-        const VIDEO_FADE_DURATION = 0.5;
-        try {
-            await document.fonts.load('bold 130px BiaoXiaoZhi');
-            await document.fonts.load('bold 64px BiaoXiaoZhi');
-            await document.fonts.load('bold 42px BiaoXiaoZhi');
-            await document.fonts.load('bold 84px BiaoXiaoZhi');
-            await document.fonts.ready;
-            console.log('✅ 字体已就绪，开始单个录制');
-        } catch (e) {
-            console.warn('⚠️ 字体加载失败，使用系统字体');
-        }
+        const FADE_DURATION = 0.5;
+        const UI_FADE_DURATION = 0.3;
+
+        await document.fonts.ready;
         const audioDest = initAudioMixer();
+
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, W, H);
+
         const canvasStream = canvas.captureStream(30);
         const audioTracks = audioDest.stream.getAudioTracks();
         const combinedStream = new MediaStream();
         canvasStream.getVideoTracks().forEach(t => combinedStream.addTrack(t));
         audioTracks.forEach(t => combinedStream.addTrack(t));
-        console.log(`📹 视频轨道: ${canvasStream.getVideoTracks().length}, 音频轨道: ${audioTracks.length}`);
+
         let mimeType = 'video/webm;codecs=vp9';
         if (!MediaRecorder.isTypeSupported(mimeType)) {
             mimeType = 'video/webm;codecs=vp8';
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-                mimeType = 'video/webm';
-            }
+            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'video/webm';
         }
-        console.log('📹 使用 MIME:', mimeType);
-        const recorder = new MediaRecorder(combinedStream, { mimeType: mimeType, videoBitsPerSecond: 5000000 });
+
+        const recorder = new MediaRecorder(combinedStream, { mimeType, videoBitsPerSecond: 8000000 });
         const chunks = [];
         let recorderError = null;
-        recorder.ondataavailable = e => {
-            if (e.data && e.data.size > 0) {
-                chunks.push(e.data);
-            }
-        };
+        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
         const recordingComplete = new Promise((resolve, reject) => {
             recorder.onstop = () => {
                 if (recorderError) { reject(recorderError); return; }
@@ -1985,17 +1769,16 @@ if (assets.scoreBg) {
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = `rank_${startRank}-${endRank}_${new Date().toISOString().slice(0,10)}.webm`;
-                    document.body.appendChild(a);
                     a.click();
-                    document.body.removeChild(a);
                     setTimeout(() => URL.revokeObjectURL(url), 5000);
                     resolve();
-                } catch (e) { reject(e); }
+                } catch(e) { reject(e); }
             };
-            recorder.onerror = (e) => { recorderError = e; };
+            recorder.onerror = e => { recorderError = e; };
         });
-        console.log('🎬 开始录制...');
+
         recorder.start(1000);
+
         const totalRanks = endRank - startRank + 1;
         const videos = [];
         for (let i = 0; i < totalRanks; i++) {
@@ -2007,15 +1790,29 @@ if (assets.scoreBg) {
             v.playsInline = true;
             v.crossOrigin = 'anonymous';
             await new Promise(r => { v.onloadedmetadata = r; });
-            videos.push({ video: v, data: d, rankIndex: rankIndex });
+            v.currentTime = 0;
+            await new Promise(r => { v.onseeked = r; });
+            const frameCanvas = document.createElement('canvas');
+            frameCanvas.width = W;
+            frameCanvas.height = H;
+            const fctx = frameCanvas.getContext('2d');
+            const vw = v.videoWidth || 1920;
+            const vh = v.videoHeight || 1080;
+            const s = Math.min(W/vw, H/vh);
+            fctx.drawImage(v, (W - vw*s)/2, (H - vh*s)/2, vw*s, vh*s);
+            const firstFrame = new Image();
+            firstFrame.src = frameCanvas.toDataURL('image/png');
+            await new Promise(r => { firstFrame.onload = r; });
+            videos.push({ video: v, data: d, rankIndex, firstFrame });
         }
+
         for (let vIdx = 0; vIdx < videos.length; vIdx++) {
-            const { video, data: d, rankIndex } = videos[vIdx];
+            const { video, data: d, firstFrame } = videos[vIdx];
             const processedCount = vIdx + 1;
             const startTime = d.startTime || 0;
             const endTime = d.endTime > 0 ? d.endTime : video.duration;
             const duration = Math.max(endTime - startTime, 0.5);
-            console.log(`🎯 第 ${d.rank} 名 (${processedCount}/${totalRanks})`);
+
             connectVideoAudio(video);
             if (startTime > 0) {
                 video.currentTime = startTime;
@@ -2025,61 +1822,106 @@ if (assets.scoreBg) {
             if (audioContext && audioContext.state === 'suspended') {
                 await audioContext.resume();
             }
+
             const playStart = performance.now();
             const totalDuration = duration * 1000;
-            const fadeMs = VIDEO_FADE_DURATION * 1000;
-            const videoW = video.videoWidth || 1920;
-            const videoH = video.videoHeight || 1080;
-            const scale = Math.min(W / videoW, H / videoH);
-            const scaledW = videoW * scale;
-            const scaledH = videoH * scale;
-            const offsetX = (W - scaledW) / 2;
-            const offsetY = (H - scaledH) / 2;
+            const fadeMs = FADE_DURATION * 1000;
+            const uiFadeMs = UI_FADE_DURATION * 1000;
+
+            const vw = video.videoWidth || 1920;
+            const vh = video.videoHeight || 1080;
+            const scale = Math.min(W/vw, H/vh);
+            const sw = vw * scale;
+            const sh = vh * scale;
+            const ox = (W - sw) / 2;
+            const oy = (H - sh) / 2;
+
             let gainNode = null;
             if (currentAudioNode && audioContext) {
                 gainNode = audioContext.createGain();
                 currentAudioNode.connect(gainNode);
                 gainNode.connect(audioDestination);
             }
+
+            const nextVideo = (vIdx < videos.length - 1) ? videos[vIdx + 1] : null;
+
             while (performance.now() - playStart < totalDuration) {
                 const elapsed = performance.now() - playStart;
                 const progress = elapsed / totalDuration;
+                const isFadingOut = elapsed > totalDuration - fadeMs;
+                const fadeOutType = d.fadeOutType || '1';
+
                 let videoAlpha = 1;
-                if (elapsed < fadeMs) {
-                    videoAlpha = elapsed / fadeMs;
-                } else if (elapsed > totalDuration - fadeMs) {
+                if (isFadingOut && fadeOutType === '1') {
                     videoAlpha = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
                 }
+
                 if (gainNode) {
-                    if (elapsed < fadeMs) {
-                        gainNode.gain.value = elapsed / fadeMs;
-                    } else if (elapsed > totalDuration - fadeMs) {
+                    if (isFadingOut && fadeOutType === '1') {
                         gainNode.gain.value = 1 - (elapsed - (totalDuration - fadeMs)) / fadeMs;
                     } else {
                         gainNode.gain.value = 1;
                     }
                 }
-                drawFrame(ctx, video, d, 1, W, H, offsetX, offsetY, scaledW, scaledH, videoAlpha, elapsed / 1000, false, null, 0, null);
+
+                let uiAlpha = 1;
+                if (isFadingOut) {
+                    if (fadeOutType === '1') {
+                        uiAlpha = 1 - Math.min((elapsed - (totalDuration - fadeMs)) / uiFadeMs, 1);
+                    } else if (fadeOutType === '2') {
+                        uiAlpha = 0;
+                    } else if (fadeOutType === '3') {
+                        uiAlpha = 1 - Math.min((elapsed - (totalDuration - fadeMs)) / 100, 1);
+                    }
+                }
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, W, H);
+
+                if (fadeOutType === '3' && isFadingOut) {
+                    const moveProgress = (elapsed - (totalDuration - fadeMs)) / fadeMs;
+                    const moveY = -moveProgress * H;
+                    ctx.globalAlpha = 1;
+                    ctx.drawImage(video, ox, oy + moveY, sw, sh);
+                    if (nextVideo && nextVideo.firstFrame) {
+                        ctx.globalAlpha = 1;
+                        const revealY = (1 - moveProgress) * H;
+                        ctx.drawImage(nextVideo.firstFrame, 0, revealY, W, H);
+                    }
+                } else {
+                    ctx.globalAlpha = videoAlpha;
+                    ctx.drawImage(video, ox, oy, sw, sh);
+                    ctx.globalAlpha = uiAlpha;
+                    if (uiAlpha > 0.01) {
+                        drawUI(ctx, d, W, H, elapsed / 1000);
+                    }
+                }
+
                 const overall = (vIdx + progress) / totalRanks * 100;
                 document.getElementById('single-progress-text').textContent = `第 ${d.rank} 名 (${processedCount}/${totalRanks})...`;
                 document.getElementById('single-progress-percent').textContent = overall.toFixed(0) + '%';
                 document.getElementById('single-progress-fill').style.width = overall.toFixed(0) + '%';
+
                 await sleepFrame();
             }
+
             video.pause();
         }
+
         videos.forEach(({ video }) => {
             URL.revokeObjectURL(video.src);
             video.remove();
         });
-        console.log('📝 所有片段处理完成，停止录制...');
+
         recorder.stop();
         await recordingComplete;
-        console.log('✅ 单个视频生成完成！');
     }
 
-    // ==================== 视频裁剪功能 ====================
+    // ============================================================
+    // 裁剪功能
+    // ============================================================
     let currentTrimIndex = -1;
+
     function openVideoTrimModal(index) {
         const data = rankData[index];
         if (!data.videoFile) {
@@ -2102,6 +1944,7 @@ if (assets.scoreBg) {
             }
         };
     }
+
     function closeTrimModal() {
         const modal = document.getElementById('trim-modal');
         const video = document.getElementById('trim-video');
@@ -2110,14 +1953,17 @@ if (assets.scoreBg) {
         modal.style.display = 'none';
         currentTrimIndex = -1;
     }
+
     function setTrimStart() {
         const video = document.getElementById('trim-video');
         document.getElementById('trim-start').value = video.currentTime.toFixed(2);
     }
+
     function setTrimEnd() {
         const video = document.getElementById('trim-video');
         document.getElementById('trim-end').value = video.currentTime.toFixed(2);
     }
+
     function previewTrim() {
         const video = document.getElementById('trim-video');
         const start = parseFloat(document.getElementById('trim-start').value) || 0;
@@ -2132,6 +1978,7 @@ if (assets.scoreBg) {
         };
         video.addEventListener('timeupdate', checkEnd);
     }
+
     function saveTrimSettings() {
         const video = document.getElementById('trim-video');
         const start = parseFloat(document.getElementById('trim-start').value) || 0;
@@ -2148,18 +1995,20 @@ if (assets.scoreBg) {
         closeTrimModal();
     }
 
-    // ==================== 初始化 ====================
+    // ============================================================
+    // 初始化
+    // ============================================================
     window.addEventListener('DOMContentLoaded', () => {
         setTimeout(loadAssets, 200);
         if (document.getElementById('video-gen').classList.contains('active')) {
             renderRankEntries();
             setTimeout(() => drawPreview(0), 300);
-            window._vgInitialized = true;
+            window._vgInit = true;
         }
         if (document.getElementById('single-video-gen').classList.contains('active')) {
             updateSingleRankPreview();
         }
     });
-    </script>
+</script>
 </body>
 </html>
