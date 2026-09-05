@@ -1502,6 +1502,7 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
 
                 if (fadeOutType === '3' && isFadingOut) {
                     const moveProgress = (elapsed - (totalDuration - fadeMs)) / fadeMs;
+	    const slideMs = 0.3 * 1000;
                     const moveY = -moveProgress * H;
                     ctx.globalAlpha = 1;
                     ctx.drawImage(video, ox, oy + moveY, sw, sh);
@@ -1839,6 +1840,7 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
 
                 if (fadeOutType === '3' && isFadingOut) {
                     const moveProgress = (elapsed - (totalDuration - fadeMs)) / fadeMs;
+	    const slideMs = 0.3 * 1000;
                     const moveY = -moveProgress * H;
                     ctx.globalAlpha = 1;
                     ctx.drawImage(video, ox, oy + moveY, sw, sh);
