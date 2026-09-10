@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 6.0 - 真·神级转场 -->
+<!-- 版本 6.1 - 优化作品信息入场动画 -->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -736,7 +736,7 @@
         </div>
     </div>
 
-    <div id="version-info">版本 6.0 (2026-09-05) — 真·神级转场</div>
+    <div id="version-info">版本 6.1 (2026-09-05) — 优化作品信息滑入放大动画</div>
     <script>
     // ============================================================
     // 登录检查
@@ -1067,18 +1067,19 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
     }
 
     // ============================================================
-    // 绘制函数（含入场动画）
+    // 绘制函数（含优化后的入场动画）
     // ============================================================
     function drawUI(ctx, d, W, H, elapsed) {
         const UI_FADE = 0.3;
         const RANK_FADE = 0.3;
         const SYMBOL_ROTATE = 0.3;
-        const INFO_SLIDE = 0.2;
+        const INFO_SLIDE = 0.2; // 滑入放大持续时间
         const NUM_FADE = 0.1;
 
         const t = Math.min(elapsed, UI_FADE);
         const uiAlpha = t / UI_FADE;
 
+        // 1. 排名数字动画
         if (assets.rankCircle) {
             safeDrawImage(ctx, assets.rankCircle, 60, H - 280, 200, 200);
         } else {
@@ -1093,13 +1094,27 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
 
         const rank = parseInt(d.rank);
         const baseSize = rank <= 10 ? 130 : 100;
-        let rankScale = 0.5 + 0.5 * Math.min(elapsed / RANK_FADE, 1);
+        
+        // 排名数字也加入滑入放大效果
+        let rankOffsetX = 0;
+        let rankScale = 1;
+        if (elapsed < INFO_SLIDE) {
+            const p = elapsed / INFO_SLIDE;
+            rankOffsetX = -50 * (1 - p);
+            rankScale = 0.3 + 0.7 * p;
+        }
+
+        ctx.save();
+        ctx.translate(rankOffsetX, 0);
+        ctx.scale(rankScale, rankScale);
         ctx.fillStyle = '#56ab2f';
-        ctx.font = 'bold ' + (baseSize * rankScale) + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+        ctx.font = 'bold ' + baseSize + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(d.rank), 160, H - 180);
+        ctx.restore();
 
+        // 2. 变化图标动画
         const changeImg = getChangeImage(d.changeType);
         const changeLabels = { new: 'NEW', up: '↑', down: '↓', flat: '—', re: 'RE' };
         let rotation = 0;
@@ -1125,30 +1140,34 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         }
         ctx.restore();
 
+        // 3. 作品信息（歌名、P主等）动画 - 核心修改点
         let infoOffsetX = 0;
         let infoScale = 1;
         if (elapsed < INFO_SLIDE) {
             const p = elapsed / INFO_SLIDE;
-            infoOffsetX = -50 * (1 - p);
-            infoScale = 0.4 + 0.6 * p;
+            infoOffsetX = -50 * (1 - p); // 从左侧50px处开始
+            infoScale = 0.3 + 0.7 * p;   // 从30%大小开始
         }
 
         ctx.save();
         ctx.globalAlpha = uiAlpha;
         ctx.translate(infoOffsetX, 0);
         ctx.scale(infoScale, infoScale);
+        
         const displayName = d.chineseName || d.songName || '';
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 52px Microsoft YaHei';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText(displayName, 300, H - 210);
+        
         const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
         ctx.fillStyle = '#ccc';
         ctx.font = '32px Microsoft YaHei';
         ctx.fillText(artistLine || '', 300, H - 160);
         ctx.restore();
 
+        // 4. 分数背景及文字
         const bg = assets.scoreBg;
         if (bg) {
             const bgW = bg.naturalWidth || 300;
@@ -1177,6 +1196,7 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         ctx.textAlign = 'right';
         ctx.fillText(score2, bgX2 + bgW2 - 20, bgH2 / 2);
 
+        // 5. 历史记录区域
         if (assets.historyBottom) {
             safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
         } else {
