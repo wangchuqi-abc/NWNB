@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 6.1 - 优化作品信息入场动画 -->
+<!-- 版本 6.0 - 真·神级转场 -->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -736,7 +736,7 @@
         </div>
     </div>
 
-    <div id="version-info">版本 6.1 (2026-09-05) — 优化作品信息滑入放大动画</div>
+    <div id="version-info">版本 6.0 (2026-09-05) — 真·神级转场</div>
     <script>
     // ============================================================
     // 登录检查
@@ -913,29 +913,40 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
     function loadAssetWithRetry(key, path, maxRetries = 3, delay = 500) {
         return new Promise((resolve) => {
             let retries = 0;
+            let loaded = false;
             function attempt() {
+                if (loaded) return;
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
                 const timeout = setTimeout(() => {
-                    img.src = '';
+                    if (loaded) return;
+                    loaded = true;
                     retries++;
                     if (retries < maxRetries) {
-                        console.warn(`素材 ${key} 加载超时，重试 ${retries+1}`);
+                        console.warn('⚠️ 素材 ' + key + ' 加载超时，重试 ' + (retries+1));
                         setTimeout(attempt, delay);
                     } else {
-                        console.warn(`素材 ${key} 加载失败，使用降级方案`);
+                        console.warn('⚠️ 素材 ' + key + ' 加载失败，使用降级方案');
                         resolve(createFallbackAsset(key));
                     }
                 }, 8000);
-                img.onload = () => { clearTimeout(timeout); console.log(`✅ 素材 ${key} 加载成功`); resolve(img); };
+                img.onload = () => {
+                    if (loaded) return;
+                    loaded = true;
+                    clearTimeout(timeout);
+                    console.log('✅ 素材 ' + key + ' 加载成功');
+                    resolve(img);
+                };
                 img.onerror = () => {
+                    if (loaded) return;
+                    loaded = true;
                     clearTimeout(timeout);
                     retries++;
                     if (retries < maxRetries) {
-                        console.warn(`素材 ${key} 加载失败，重试 ${retries+1}`);
+                        console.warn('⚠️ 素材 ' + key + ' 加载失败，重试 ' + (retries+1));
                         setTimeout(attempt, delay);
                     } else {
-                        console.warn(`素材 ${key} 加载失败，使用降级方案`);
+                        console.warn('⚠️ 素材 ' + key + ' 加载失败，使用降级方案');
                         resolve(createFallbackAsset(key));
                     }
                 };
@@ -945,17 +956,30 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         });
     }
 
+    async function loadFontWithTimeout(fontString, timeout = 5000) {
+        console.log('🔤 尝试加载字体:', fontString);
+        try {
+            await Promise.race([
+                document.fonts.load(fontString),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('字体加载超时')), timeout))
+            ]);
+            console.log('✅ 字体加载成功:', fontString);
+        } catch(e) {
+            console.warn('⚠️ 字体加载失败 (' + fontString + '):', e.message);
+        }
+    }
+
     async function loadAssets() {
         if (assetsLoaded) return;
         console.log('📦 开始加载素材...');
         try {
-            await document.fonts.load('bold 130px BiaoXiaoZhi');
-            await document.fonts.load('bold 64px BiaoXiaoZhi');
-            await document.fonts.load('bold 42px BiaoXiaoZhi');
-            await document.fonts.load('bold 84px BiaoXiaoZhi');
-            await document.fonts.ready;
-            console.log('✅ 字体已加载');
-        } catch(e) { console.warn('⚠️ 字体加载失败:', e); }
+            await loadFontWithTimeout('bold 130px BiaoXiaoZhi');
+            await loadFontWithTimeout('bold 64px BiaoXiaoZhi');
+            await loadFontWithTimeout('bold 42px BiaoXiaoZhi');
+            await loadFontWithTimeout('bold 84px BiaoXiaoZhi');
+            // 移除 document.fonts.ready 避免卡死
+            console.log('✅ 字体处理完成');
+        } catch(e) { console.warn('⚠️ 字体处理异常:', e); }
         const keys = Object.keys(ASSET_PATHS);
         const results = await Promise.all(keys.map(k => loadAssetWithRetry(k, ASSET_PATHS[k])));
         results.forEach((img, i) => assets[keys[i]] = img);
@@ -1067,19 +1091,18 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
     }
 
     // ============================================================
-    // 绘制函数（含优化后的入场动画）
+    // 绘制函数（含入场动画）
     // ============================================================
     function drawUI(ctx, d, W, H, elapsed) {
         const UI_FADE = 0.3;
         const RANK_FADE = 0.3;
         const SYMBOL_ROTATE = 0.3;
-        const INFO_SLIDE = 0.2; // 滑入放大持续时间
+        const INFO_SLIDE = 0.2;
         const NUM_FADE = 0.1;
 
         const t = Math.min(elapsed, UI_FADE);
         const uiAlpha = t / UI_FADE;
 
-        // 1. 排名数字动画
         if (assets.rankCircle) {
             safeDrawImage(ctx, assets.rankCircle, 60, H - 280, 200, 200);
         } else {
@@ -1094,27 +1117,13 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
 
         const rank = parseInt(d.rank);
         const baseSize = rank <= 10 ? 130 : 100;
-        
-        // 排名数字也加入滑入放大效果
-        let rankOffsetX = 0;
-        let rankScale = 1;
-        if (elapsed < INFO_SLIDE) {
-            const p = elapsed / INFO_SLIDE;
-            rankOffsetX = -50 * (1 - p);
-            rankScale = 0.3 + 0.7 * p;
-        }
-
-        ctx.save();
-        ctx.translate(rankOffsetX, 0);
-        ctx.scale(rankScale, rankScale);
+        let rankScale = 0.5 + 0.5 * Math.min(elapsed / RANK_FADE, 1);
         ctx.fillStyle = '#56ab2f';
-        ctx.font = 'bold ' + baseSize + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
+        ctx.font = 'bold ' + (baseSize * rankScale) + 'px BiaoXiaoZhi, Microsoft YaHei, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(d.rank), 160, H - 180);
-        ctx.restore();
 
-        // 2. 变化图标动画
         const changeImg = getChangeImage(d.changeType);
         const changeLabels = { new: 'NEW', up: '↑', down: '↓', flat: '—', re: 'RE' };
         let rotation = 0;
@@ -1140,34 +1149,30 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         }
         ctx.restore();
 
-        // 3. 作品信息（歌名、P主等）动画 - 核心修改点
         let infoOffsetX = 0;
         let infoScale = 1;
         if (elapsed < INFO_SLIDE) {
             const p = elapsed / INFO_SLIDE;
-            infoOffsetX = -50 * (1 - p); // 从左侧50px处开始
-            infoScale = 0.3 + 0.7 * p;   // 从30%大小开始
+            infoOffsetX = -50 * (1 - p);
+            infoScale = 0.4 + 0.6 * p;
         }
 
         ctx.save();
         ctx.globalAlpha = uiAlpha;
         ctx.translate(infoOffsetX, 0);
         ctx.scale(infoScale, infoScale);
-        
         const displayName = d.chineseName || d.songName || '';
         ctx.fillStyle = '#fff';
         ctx.font = 'bold 52px Microsoft YaHei';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText(displayName, 300, H - 210);
-        
         const artistLine = [d.producer, d.vocalist].filter(Boolean).join(' - ');
         ctx.fillStyle = '#ccc';
         ctx.font = '32px Microsoft YaHei';
         ctx.fillText(artistLine || '', 300, H - 160);
         ctx.restore();
 
-        // 4. 分数背景及文字
         const bg = assets.scoreBg;
         if (bg) {
             const bgW = bg.naturalWidth || 300;
@@ -1196,7 +1201,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         ctx.textAlign = 'right';
         ctx.fillText(score2, bgX2 + bgW2 - 20, bgH2 / 2);
 
-        // 5. 历史记录区域
         if (assets.historyBottom) {
             safeDrawImage(ctx, assets.historyBottom, W - 520, H - 170, 460, 120);
         } else {
@@ -1381,7 +1385,7 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         const FADE_DURATION = 0.5;
         const UI_FADE_DURATION = 0.3;
 
-        await document.fonts.ready;
+        // 跳过 document.fonts.ready 避免卡死
         const audioDest = initAudioMixer();
 
         ctx.fillStyle = '#000';
@@ -1717,7 +1721,7 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         const FADE_DURATION = 0.5;
         const UI_FADE_DURATION = 0.3;
 
-        await document.fonts.ready;
+        // 跳过 document.fonts.ready 避免卡死
         const audioDest = initAudioMixer();
 
         ctx.fillStyle = '#000';
