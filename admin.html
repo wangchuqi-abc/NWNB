@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 6.0 - 真·神级转场 -->
+<!-- 版本 6.0 - 真·神级转场 + BV号抓取 -->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -573,6 +573,31 @@
         .trim-actions .btn-preview { background: #3498db; color: #fff; }
         .trim-actions .btn-cancel { background: #95a5a6; color: #fff; }
         .trim-actions .btn-save { background: var(--primary); color: #fff; }
+        
+        /* 新增：BV号输入样式 */
+        .bv-fetch-wrap {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .bv-fetch-wrap input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        .btn-bv {
+            padding: 8px 12px;
+            background: #e67e22;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .btn-bv:hover { background: #d35400; }
     </style>
 </head>
 <body>
@@ -977,7 +1002,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
             await loadFontWithTimeout('bold 64px BiaoXiaoZhi');
             await loadFontWithTimeout('bold 42px BiaoXiaoZhi');
             await loadFontWithTimeout('bold 84px BiaoXiaoZhi');
-            // 移除 document.fonts.ready 避免卡死
             console.log('✅ 字体处理完成');
         } catch(e) { console.warn('⚠️ 字体处理异常:', e); }
         const keys = Object.keys(ASSET_PATHS);
@@ -1024,6 +1048,10 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
                             <div class="file-input-wrap">
                                 <input type="file" accept="video/mp4,video/webm" onchange="handleVideoSelect(${i}, this)">
                                 <span class="file-name" id="fname-${i}">${d.videoFile?d.videoFile.name:'未选择'}</span>
+                            </div>
+                            <div class="bv-fetch-wrap">
+                                <input type="text" id="bv-input-${i}" placeholder="输入BV号自动抓取">
+                                <button class="btn-bv" onclick="fetchBilibiliVideo(${i})">🔗 抓取</button>
                             </div>
                             <button onclick="openVideoTrimModal(${i})" style="margin-top:8px;padding:6px 12px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;" ${d.videoFile?'':'disabled'}>✂️ 裁剪片段</button>
                         </div>
@@ -1088,6 +1116,62 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         showToast(`第${index+1}名视频已选择，请裁剪片段`, 'success');
         if (index === currentPreviewRank) drawPreview(index);
         setTimeout(() => openVideoTrimModal(index), 300);
+    }
+
+    // ============================================================
+    // BV号抓取功能
+    // ============================================================
+    async function fetchBilibiliVideo(index) {
+        const bvInput = document.getElementById(`bv-input-${index}`);
+        const bvid = bvInput.value.trim();
+        if (!bvid) {
+            showToast('请输入有效的 BV 号！', 'error');
+            return;
+        }
+
+        const btn = document.querySelector(`#entry-${index} .btn-bv`);
+        const originalText = btn.textContent;
+        btn.textContent = '⏳ 解析中...';
+        btn.disabled = true;
+
+        try {
+            // 使用免费解析API (mir6.com)
+            const apiUrl = `https://api.mir6.com/api/bzjiexi?url=https://www.bilibili.com/video/${bvid}&type=json`;
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+
+            if (data.code === 200 && data.data && data.data.url) {
+                const videoUrl = data.data.url;
+                
+                // 将网络视频流转换为 Blob 对象以兼容后续逻辑
+                showToast('正在下载视频流...', 'success');
+                const videoResponse = await fetch(videoUrl);
+                const blob = await videoResponse.blob();
+                const file = new File([blob], `${bvid}_grabbed.mp4`, { type: 'video/mp4' });
+
+                // 模拟本地上传
+                rankData[index].videoFile = file;
+                document.getElementById(`fname-${index}`).textContent = file.name;
+                const status = document.querySelector(`#entry-${index} .rank-status`);
+                status.textContent = '✅ 已选视频';
+                status.classList.remove('pending');
+                
+                const trimBtn = document.querySelector(`#entry-${index} button[onclick*="openVideoTrimModal"]`);
+                if (trimBtn) trimBtn.disabled = false;
+                
+                showToast(`第${index+1}名视频抓取成功！`, 'success');
+                if (index === currentPreviewRank) drawPreview(index);
+                setTimeout(() => openVideoTrimModal(index), 300);
+            } else {
+                showToast('解析失败，请检查 BV 号是否正确或稍后再试', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('网络错误，无法连接解析服务', 'error');
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
     }
 
     // ============================================================
@@ -1385,7 +1469,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         const FADE_DURATION = 0.5;
         const UI_FADE_DURATION = 0.3;
 
-        // 跳过 document.fonts.ready 避免卡死
         const audioDest = initAudioMixer();
 
         ctx.fillStyle = '#000';
@@ -1526,7 +1609,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
 
                 if (fadeOutType === '3' && isFadingOut) {
                     const moveProgress = (elapsed - (totalDuration - fadeMs)) / fadeMs;
-	    const slideMs = 0.1 * 1000;
                     const moveY = -moveProgress * H;
                     ctx.globalAlpha = 1;
                     ctx.drawImage(video, ox, oy + moveY, sw, sh);
@@ -1614,6 +1696,10 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
                             <div class="file-input-wrap">
                                 <input type="file" accept="video/mp4,video/webm" onchange="handleSingleVideoSelect(${actualRank-1}, this)">
                                 <span class="file-name" id="single-fname-${actualRank-1}">${d.videoFile?d.videoFile.name:'未选择'}</span>
+                            </div>
+                            <div class="bv-fetch-wrap">
+                                <input type="text" id="single-bv-input-${actualRank-1}" placeholder="输入BV号自动抓取">
+                                <button class="btn-bv" onclick="fetchBilibiliVideo(${actualRank-1})">🔗 抓取</button>
                             </div>
                             <button onclick="openVideoTrimModal(${actualRank-1})" style="margin-top:8px;padding:6px 12px;background:#3498db;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem;" ${d.videoFile?'':'disabled'}>✂️ 裁剪片段</button>
                         </div>
@@ -1721,7 +1807,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
         const FADE_DURATION = 0.5;
         const UI_FADE_DURATION = 0.3;
 
-        // 跳过 document.fonts.ready 避免卡死
         const audioDest = initAudioMixer();
 
         ctx.fillStyle = '#000';
@@ -1864,7 +1949,6 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
 
                 if (fadeOutType === '3' && isFadingOut) {
                     const moveProgress = (elapsed - (totalDuration - fadeMs)) / fadeMs;
-	    const slideMs = 0.1 * 1000;
                     const moveY = -moveProgress * H;
                     ctx.globalAlpha = 1;
                     ctx.drawImage(video, ox, oy + moveY, sw, sh);
