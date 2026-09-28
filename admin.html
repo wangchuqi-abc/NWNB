@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- 版本 6.0 - 真·神级转场 + BV号抓取 -->
+<!-- 版本 6.1 - 排名上限扩展至50 -->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -647,7 +647,7 @@
                 <div class="vg-layout">
                     <div class="vg-form-section">
                         <div class="vg-header">
-                            <h2>周榜视频生成 · Top 20</h2>
+                            <h2>周榜视频生成 · Top 50</h2>
                             <button class="btn-generate" id="btn-generate" onclick="startVideoGeneration()">🎬 开始生成视频</button>
                         </div>
                         <div id="rank-entries"></div>
@@ -688,11 +688,11 @@
                             <h2>选择排名范围</h2>
                             <div class="form-group">
                                 <label>起始排名：</label>
-                                <input type="number" id="single-start-rank" min="1" max="20" value="1" onchange="updateSingleRankPreview()">
+                                <input type="number" id="single-start-rank" min="1" max="50" value="1" onchange="updateSingleRankPreview()">
                             </div>
                             <div class="form-group">
                                 <label>结束排名：</label>
-                                <input type="number" id="single-end-rank" min="1" max="20" value="5" onchange="updateSingleRankPreview()">
+                                <input type="number" id="single-end-rank" min="1" max="50" value="5" onchange="updateSingleRankPreview()">
                             </div>
                             <div class="form-group">
                                 <label>生成数量：</label>
@@ -761,7 +761,7 @@
         </div>
     </div>
 
-    <div id="version-info">版本 6.0 (2026-09-05) — 真·神级转场</div>
+    <div id="version-info">版本 6.1 (2026-09-05) — 排名上限50</div>
     <script>
     // ============================================================
     // 登录检查
@@ -861,7 +861,7 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
     // ============================================================
     // 视频生成核心数据
     // ============================================================
-    const TOTAL_RANKS = 20;
+    const TOTAL_RANKS = 50; // 修改为50
     const CHANGE_TYPES = [
         { value: 'new', label: 'New（新上榜）' },
         { value: 'up', label: '↑ 上升' },
@@ -1652,8 +1652,8 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
     function updateSingleRankPreview() {
         const startRank = parseInt(document.getElementById('single-start-rank').value) || 1;
         const endRank = parseInt(document.getElementById('single-end-rank').value) || 5;
-        const validStart = Math.max(1, Math.min(20, startRank));
-        const validEnd = Math.max(1, Math.min(20, endRank));
+        const validStart = Math.max(1, Math.min(TOTAL_RANKS, startRank));
+        const validEnd = Math.max(1, Math.min(TOTAL_RANKS, endRank));
         if (validStart > validEnd) {
             document.getElementById('single-rank-count').value = '范围无效';
             return;
@@ -1766,8 +1766,8 @@ h1{font-size:2.5rem;margin-bottom:32px;text-align:center;background:linear-gradi
     async function startSingleVideoGeneration() {
         const startRank = parseInt(document.getElementById('single-start-rank').value) || 1;
         const endRank = parseInt(document.getElementById('single-end-rank').value) || 5;
-        const validStart = Math.max(1, Math.min(20, startRank));
-        const validEnd = Math.max(1, Math.min(20, endRank));
+        const validStart = Math.max(1, Math.min(TOTAL_RANKS, startRank));
+        const validEnd = Math.max(1, Math.min(TOTAL_RANKS, endRank));
         if (validStart > validEnd) {
             showToast('排名范围无效！', 'error');
             return;
